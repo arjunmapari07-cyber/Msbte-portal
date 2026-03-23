@@ -23,7 +23,9 @@ It is designed to provide students with easy access to study materials, informat
 2. Open `index.html` in any browser
 
 ## 🌐 Live Demo
-(Add your Netlify link here if you deploy)
+👉
+[Open MSBTE Portal](https://cute-lokum-f55f6c.netlify.app/)
+
 
 ## 📧 Author
 - Arjun Mapari
