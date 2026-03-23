@@ -1,0 +1,1573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>MSBTE Study Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+/* ══ RESET ══ */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --blue:#1a4fa0;--blue-dark:#0d3278;--orange:#f97316;--orange-dark:#ea580c;
+  --g50:#f8fafc;--g100:#f1f5f9;--g200:#e2e8f0;--g300:#cbd5e1;
+  --g400:#94a3b8;--g500:#64748b;--g600:#475569;--g700:#334155;
+  --g800:#1e293b;--g900:#0f172a;--red:#dc2626;
+  --sh-sm:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --sh-md:0 4px 6px rgba(0,0,0,.07),0 2px 4px rgba(0,0,0,.05);
+  --sh-lg:0 10px 15px rgba(0,0,0,.1),0 4px 6px rgba(0,0,0,.05);
+  --sh-xl:0 20px 25px rgba(0,0,0,.1),0 10px 10px rgba(0,0,0,.04);
+  --r-sm:8px;--r-md:12px;--r-lg:18px;--r-xl:24px;
+  --nav-h:52px;--mob-tab-h:52px;
+  --pad:clamp(.875rem,3vw,1.5rem);--max-w:1280px;
+}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{font-family:'Inter',system-ui,sans-serif;background:#eef2f9;color:var(--g800);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+button,input,select,textarea{font-family:inherit}
+input,select,textarea{font-size:16px!important;-webkit-appearance:none;appearance:none}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--g100)}
+::-webkit-scrollbar-thumb{background:var(--blue);border-radius:3px}
+
+/* ══ LAYOUT ══ */
+.page-wrap{width:100%;max-width:var(--max-w);margin:0 auto;padding:clamp(1rem,3vw,1.75rem) var(--pad)}
+.page-wrap-sm{width:100%;max-width:1100px;margin:0 auto;padding:clamp(1rem,3vw,1.75rem) var(--pad)}
+
+/* ══ CARDS ══ */
+.card{background:#fff;border-radius:var(--r-lg);box-shadow:var(--sh-sm);border:1px solid var(--g100)}
+.card-hover{transition:transform .2s ease,box-shadow .2s ease}
+.card-hover:hover{transform:translateY(-3px);box-shadow:var(--sh-lg)}
+
+/* ══ NAVBAR ══ */
+.nav-root{background:linear-gradient(100deg,#0b2d6e,#1a4fa0,#1d4ed8);box-shadow:0 2px 16px rgba(11,45,110,.35);position:sticky;top:0;z-index:500;width:100%}
+.nav-top{height:var(--nav-h);display:flex;align-items:center;gap:.75rem;padding:0 var(--pad);max-width:var(--max-w);margin:0 auto;overflow:hidden}
+.nav-logo{display:flex;align-items:center;gap:.5rem;cursor:pointer;flex-shrink:0}
+.nav-logo-icon{width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:1.05rem;flex-shrink:0}
+.nav-logo-text{color:#fff;font-weight:800;font-size:.875rem;font-family:'Space Grotesk',sans-serif;line-height:1.2}
+.nav-logo-sub{font-size:.45rem;font-weight:500;opacity:.65;letter-spacing:1.5px;text-transform:uppercase;display:block}
+.nav-tabs{display:flex;gap:0;flex:1;margin-left:1rem;overflow-x:auto;scrollbar-width:none}
+.nav-tabs::-webkit-scrollbar{display:none}
+.nav-tab{background:none;border:none;border-bottom:3px solid transparent;color:rgba(255,255,255,.85);padding:.5rem .75rem;border-radius:8px 8px 0 0;font-weight:600;cursor:pointer;font-size:.8rem;font-family:'Inter',sans-serif;white-space:nowrap;transition:all .15s;flex-shrink:0;display:flex;align-items:center;gap:.3rem}
+.nav-tab:hover{color:#fff;background:rgba(255,255,255,.1)}
+.nav-tab.active{color:#fff;font-weight:800;background:rgba(255,255,255,.18);border-bottom-color:#fb923c}
+.nav-actions{display:flex;gap:.375rem;flex-shrink:0;margin-left:auto}
+.nav-btn{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);color:#fff;padding:.35rem .75rem;border-radius:7px;font-weight:600;font-size:.75rem;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap;transition:all .15s}
+.nav-btn-orange{background:linear-gradient(135deg,#ea580c,#f97316);border:none;color:#fff;padding:.35rem .875rem;border-radius:7px;font-weight:700;font-size:.75rem;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap}
+.mob-tabbar{display:none;overflow-x:auto;scrollbar-width:none;border-top:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.2)}
+.mob-tabbar::-webkit-scrollbar{display:none}
+.mob-tabbar-inner{display:flex;width:100%}
+.mob-tab{background:none;border:none;border-bottom:3px solid transparent;color:rgba(255,255,255,.72);padding:.45rem .5rem;cursor:pointer;font-family:'Inter',sans-serif;font-size:.65rem;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:.15rem;white-space:nowrap;flex:1;min-width:52px;transition:all .15s}
+.mob-tab.active{color:#fff;font-weight:700;border-bottom-color:#fb923c;background:rgba(255,255,255,.06)}
+.mob-tab-icon{font-size:1.1rem;line-height:1}
+
+/* ══ HERO ══ */
+.hero{background:linear-gradient(135deg,var(--blue-dark) 0%,var(--blue) 60%,#3b82f6 100%);border-radius:var(--r-xl);padding:clamp(1.5rem,5vw,3rem) clamp(1.25rem,5vw,2.5rem);color:#fff;position:relative;overflow:hidden;box-shadow:0 20px 60px rgba(13,50,120,.2)}
+.hero::before{content:'';position:absolute;top:-60px;right:-60px;width:280px;height:280px;border-radius:50%;background:rgba(249,115,22,.12);pointer-events:none}
+.hero::after{content:'';position:absolute;bottom:-40px;left:-40px;width:200px;height:200px;border-radius:50%;background:rgba(249,115,22,.08);pointer-events:none}
+
+/* ══ PAGE HEADER ══ */
+.page-hd{background:linear-gradient(135deg,var(--blue-dark),var(--blue));border-radius:var(--r-xl);padding:clamp(1.25rem,4vw,2rem);color:#fff;position:relative;overflow:hidden;margin-bottom:1.5rem}
+.page-hd::before{content:'';position:absolute;right:-30px;top:-30px;width:160px;height:160px;border-radius:50%;background:rgba(249,115,22,.12);pointer-events:none}
+.page-hd-tag{font-size:.65rem;font-weight:800;color:#fed7aa;letter-spacing:1px;text-transform:uppercase;margin-bottom:.5rem}
+.page-hd-title{font-size:clamp(1.25rem,3.5vw,1.875rem);font-weight:900;font-family:'Space Grotesk',sans-serif;line-height:1.2}
+.page-hd-sub{opacity:.72;font-size:.9rem;margin-top:.25rem}
+
+/* ══ TABLE ══ */
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--r-md);border:1px solid var(--g100)}
+.tbl{width:100%;border-collapse:collapse;font-size:.875rem}
+.tbl th{padding:.75rem 1rem;text-align:left;font-size:.7rem;font-weight:800;color:var(--g500);text-transform:uppercase;letter-spacing:.8px;background:#f0f7ff;border-bottom:2px solid #dbeafe;white-space:nowrap}
+.tbl td{padding:.75rem 1rem;border-bottom:1px solid var(--g100);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:#f8fafc}
+
+/* ══ FORMS ══ */
+.form-label{display:block;font-weight:600;font-size:.8rem;margin-bottom:.375rem;color:var(--g600)}
+.form-input{width:100%;padding:.625rem .875rem;border:2px solid var(--g200);border-radius:var(--r-sm);font-size:.875rem;font-family:'Inter',sans-serif;outline:none;background:#fff;transition:border-color .15s;color:var(--g800)}
+.form-input:focus{border-color:var(--blue)}
+.form-select{width:100%;padding:.625rem .875rem;border:2px solid var(--g200);border-radius:var(--r-sm);font-size:.875rem;font-family:'Inter',sans-serif;outline:none;background:#fff;color:var(--g800);cursor:pointer}
+.form-select:focus{border-color:var(--blue)}
+
+/* ══ BUTTONS ══ */
+.back-btn{background:#fff;border:2px solid var(--g200);padding:.5rem 1rem;border-radius:var(--r-sm);cursor:pointer;font-weight:700;color:var(--g700);font-family:'Inter',sans-serif;font-size:.875rem;display:inline-flex;align-items:center;gap:.375rem;box-shadow:var(--sh-sm);transition:all .15s;white-space:nowrap}
+.back-btn:hover{border-color:var(--blue);color:var(--blue)}
+
+/* ══ OVERLAY / MODAL ══ */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:9000;padding:1rem;backdrop-filter:blur(6px);animation:fadeIn .2s ease;overflow-y:auto}
+.modal{background:#fff;border-radius:var(--r-xl);width:100%;max-width:640px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:var(--sh-xl);animation:slideUp .25s ease}
+.modal-hd{background:linear-gradient(100deg,var(--blue-dark),var(--blue));padding:1.125rem 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:.75rem}
+.modal-body{flex:1;overflow-y:auto;padding:1.5rem}
+.modal-ft{padding:1rem 1.5rem;border-top:1px solid var(--g100);display:flex;gap:.75rem;background:var(--g50);flex-shrink:0}
+
+/* ══ TOAST ══ */
+.toast-wrap{position:fixed;bottom:calc(var(--mob-tab-h) + .75rem);right:.75rem;left:.75rem;z-index:99999;display:flex;flex-direction:column;gap:.5rem;pointer-events:none}
+.toast{padding:.75rem 1.125rem;border-radius:10px;font-weight:600;font-size:.875rem;color:#fff;animation:slideUp .2s ease;box-shadow:0 4px 16px rgba(0,0,0,.2);pointer-events:all}
+
+/* ══ SEARCH ══ */
+.search-wrap{position:relative}
+.search-icon{position:absolute;left:.875rem;top:50%;transform:translateY(-50%);font-size:.9rem;pointer-events:none}
+.search-input{width:100%;padding:.75rem .875rem .75rem 2.5rem;border:2px solid var(--g200);border-radius:var(--r-md);font-size:.9rem;font-family:'Inter',sans-serif;outline:none;background:#f8fafc;transition:border-color .15s;color:var(--g800)}
+.search-input:focus{border-color:var(--blue);background:#fff}
+.search-clear{position:absolute;right:.75rem;top:50%;transform:translateY(-50%);background:var(--g200);border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:.72rem;color:var(--g600);display:flex;align-items:center;justify-content:center}
+.search-dropdown{position:absolute;top:calc(100% + .375rem);left:0;right:0;background:#fff;border:1px solid var(--g200);border-radius:var(--r-md);box-shadow:var(--sh-xl);z-index:100;max-height:240px;overflow-y:auto}
+.search-item{display:flex;align-items:center;gap:.75rem;padding:.625rem 1rem;cursor:pointer;border-bottom:1px solid var(--g50);transition:background .1s}
+.search-item:hover{background:#eff6ff}
+.search-item:last-child{border-bottom:none}
+
+/* ══ SPINNER / EMPTY ══ */
+.spinner{width:36px;height:36px;border:4px solid #dbeafe;border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto}
+.empty{text-align:center;padding:3rem 1.5rem;background:#fff;border-radius:var(--r-lg);box-shadow:var(--sh-sm)}
+.empty-icon{font-size:3rem;opacity:.25;margin-bottom:.875rem}
+
+/* ══ SECTION HEADER ══ */
+.sec-hd{background:linear-gradient(100deg,var(--blue-dark),var(--blue));padding:.75rem 1.25rem;display:flex;align-items:center;justify-content:space-between;gap:.75rem}
+.sec-num{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:1rem;font-family:'Space Grotesk',sans-serif;flex-shrink:0}
+
+/* ══ ANIMATIONS ══ */
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideIn{from{opacity:0;transform:translateX(-16px)}to{opacity:1;transform:none}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+/* ══ RESPONSIVE ══ */
+@media(max-width:768px){
+  :root{--pad:.875rem;--nav-h:48px}
+  body{font-size:14px}
+  .nav-tabs,.nav-actions{display:none!important}
+  .mob-tabbar{display:block!important}
+  .toast-wrap{bottom:calc(var(--mob-tab-h) + .5rem)}
+  .card-hover:hover{transform:none;box-shadow:var(--sh-sm)}
+  .modal{border-radius:var(--r-xl) var(--r-xl) 0 0!important;max-height:95vh;width:100%!important;max-width:100%!important;margin-top:auto}
+  .overlay{align-items:flex-end!important;padding:0!important}
+  main{padding-bottom:calc(var(--mob-tab-h) + .5rem)}
+  table{min-width:520px}
+}
+@media(max-width:480px){
+  :root{--pad:.75rem}
+  .hero{padding:1.5rem 1rem}
+  .page-hd{padding:1.25rem 1rem}
+}
+@media(hover:none) and (pointer:coarse){
+  .card-hover:active{opacity:.88}
+  *{-webkit-tap-highlight-color:rgba(26,79,160,.12)}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect}=React;
+
+/* ══ FIREBASE ══ */
+const FB={
+  apiKey:"AIzaSyAaK9_I9C9QnRuO4aremUZRO2PK0pZzy7M",
+  authDomain:"msbte-portal.firebaseapp.com",
+  projectId:"msbte-portal",
+  storageBucket:"msbte-portal.firebasestorage.app",
+  messagingSenderId:"323814955101",
+  appId:"1:323814955101:web:cc822a96619e7c281695b4",
+  measurementId:"G-JWNP2KL7JX"
+};
+if(!firebase.apps.length)firebase.initializeApp(FB);
+const db=firebase.firestore();
+const auth=firebase.auth();
+
+/* ══ DATA CONSTANTS ══ */
+const BRANCHES=[
+  {code:'AU',name:'Automobile Engineering',short:'Auto',icon:'🚗',color:'#1a4fa0',bg:'#dbeafe',dark:'#0d3278'},
+  {code:'CE',name:'Civil Engineering',short:'Civil',icon:'🏗️',color:'#1a4fa0',bg:'#dbeafe',dark:'#0d3278'},
+  {code:'CH',name:'Chemical Engineering',short:'Chemical',icon:'⚗️',color:'#1a4fa0',bg:'#dbeafe',dark:'#0d3278'},
+  {code:'CO',name:'Computer Engineering',short:'Computer',icon:'💻',color:'#1a4fa0',bg:'#dbeafe',dark:'#0d3278'},
+  {code:'EE',name:'Electrical Engineering',short:'Electrical',icon:'⚡',color:'#1a4fa0',bg:'#dbeafe',dark:'#0d3278'},
+  {code:'ET',name:'Electronics & Telecommunication',short:'E&TC',icon:'📶',color:'#1a4fa0',bg:'#dbeafe',dark:'#0d3278'},
+  {code:'ME',name:'Mechanical Engineering',short:'Mechanical',icon:'⚙️',color:'#1a4fa0',bg:'#dbeafe',dark:'#0d3278'},
+  {code:'IC',name:'Instrumentation',short:'Instrum.',icon:'🎛️',color:'#1a4fa0',bg:'#dbeafe',dark:'#0d3278'},
+  {code:'IE',name:'Industrial Electronics',short:'Ind.Elec',icon:'🏭',color:'#1a4fa0',bg:'#dbeafe',dark:'#0d3278'},
+  {code:'DE',name:'Digital Electronics',short:'Digital',icon:'📡',color:'#1a4fa0',bg:'#dbeafe',dark:'#0d3278'},
+  {code:'FC',name:'Fashion Technology',short:'Fashion',icon:'👗',color:'#1a4fa0',bg:'#dbeafe',dark:'#0d3278'},
+  {code:'MU',name:'Medical Electronics',short:'MedElec',icon:'🏥',color:'#1a4fa0',bg:'#dbeafe',dark:'#0d3278'},
+  {code:'PG',name:'Production Engineering',short:'Production',icon:'🔧',color:'#1a4fa0',bg:'#dbeafe',dark:'#0d3278'},
+  {code:'TX',name:'Textile Technology',short:'Textile',icon:'🧵',color:'#1a4fa0',bg:'#dbeafe',dark:'#0d3278'},
+  {code:'PE',name:'Production Engineering',short:'Prod.',icon:'⚙️',color:'#1a4fa0',bg:'#dbeafe',dark:'#0d3278'},
+  {code:'AE',name:'Agricultural Engineering',short:'Agri',icon:'🌾',color:'#1a4fa0',bg:'#dbeafe',dark:'#0d3278'},
+];
+const MODEL_ANSWER_BRANCHES=BRANCHES.filter(b=>!['CT','IC','IE','DE','AE','MN','FC','MU','PG','TX','PE','TM'].includes(b.code));
+const MBRANCHES=[
+  {code:'CO',name:'Computer Engineering',icon:'💻',color:'#1a4fa0',bg:'#dbeafe',dark:'#0d3278'},
+  {code:'CE',name:'Civil Engineering',icon:'🏗️',color:'#1a4fa0',bg:'#dbeafe',dark:'#0d3278'},
+  {code:'ME',name:'Mechanical Engineering',icon:'⚙️',color:'#1a4fa0',bg:'#dbeafe',dark:'#0d3278'},
+  {code:'EJ',name:'Electronics Engineering',icon:'🔌',color:'#1a4fa0',bg:'#dbeafe',dark:'#0d3278'},
+  {code:'EE',name:'Electrical Engineering',icon:'⚡',color:'#1a4fa0',bg:'#dbeafe',dark:'#0d3278'},
+  {code:'AI',name:'Artificial Intelligence',icon:'🤖',color:'#1a4fa0',bg:'#dbeafe',dark:'#0d3278'},
+];
+const SYLLABUS_BRANCHES=[
+  {code:'CO',name:'Computer Engineering',icon:'💻'},
+  {code:'CH',name:'Chemical Engineering',icon:'⚗️'},
+  {code:'AU',name:'Automobile Engineering',icon:'🚗'},
+  {code:'CE',name:'Civil Engineering',icon:'🏗️'},
+  {code:'ME',name:'Mechanical Engineering',icon:'⚙️'},
+  {code:'EE',name:'Electrical Engineering',icon:'⚡'},
+  {code:'ET',name:'Electronics & Telecommunication Engineering',icon:'📶'},
+];
+const SEMS=[1,2,3,4,5,6];
+const bOf=code=>BRANCHES.find(b=>b.code===code)||{color:'#64748b',bg:'#f1f5f9',dark:'#334155',icon:'📄'};
+
+/* ══ FIREBASE HELPERS ══ */
+const fbLoad=async()=>{const s=await db.collection('papers').orderBy('ts','desc').get();return s.docs.map(d=>({id:d.id,...d.data()}));};
+const fbAdd=async(data)=>{const r=await db.collection('papers').add({...data,ts:Date.now()});return{id:r.id,...data,ts:Date.now()};};
+const fbDel=async(id)=>{await db.collection('papers').doc(id).delete();};
+const fbLoadManual=async(br,s)=>{const snap=await db.collection('manualSubjects').where('branch','==',br).where('sem','==',s).get();return snap.docs.map(d=>({id:d.id,...d.data()}));};
+const fbAddManual=async(data)=>{const r=await db.collection('manualSubjects').add({...data,ts:Date.now()});return{id:r.id,...data};};
+const fbUpdateManual=async(id,data)=>{await db.collection('manualSubjects').doc(id).update(data);};
+const fbDelManual=async(id)=>{await db.collection('manualSubjects').doc(id).delete();};
+const fbLoadMPdf=async(br,s)=>{const snap=await db.collection('manualPdfs').where('branch','==',br).where('sem','==',s).get();return snap.docs.map(d=>({id:d.id,...d.data()}));};
+const fbAddMPdf=async(data)=>{const r=await db.collection('manualPdfs').add({...data,ts:Date.now()});return{id:r.id,...data};};
+const fbUpdateMPdf=async(id,data)=>{await db.collection('manualPdfs').doc(id).update(data);};
+const fbDelMPdf=async(id)=>{await db.collection('manualPdfs').doc(id).delete();};
+const fbLoadSyl=async(br,s)=>{const snap=await db.collection('syllabus').where('branch','==',br).where('sem','==',s).get();return snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.subjectCode||'').localeCompare(b.subjectCode||''));};
+const fbAddSyl=async(data)=>{const r=await db.collection('syllabus').add({...data,ts:Date.now()});return{id:r.id,...data,ts:Date.now()};};
+const fbDelSyl=async(id)=>{await db.collection('syllabus').doc(id).delete();};
+const fbUpdateSyl=async(id,br,s,data)=>{await db.collection('syllabus').doc(id).update(data);};
+
+/* ══ TOAST ══ */
+let _toasts=[];let _setToasts=null;
+const toast=(msg,type='s')=>{const id=Date.now();_toasts=[..._toasts,{id,msg,type}];if(_setToasts)_setToasts([..._toasts]);setTimeout(()=>{_toasts=_toasts.filter(t=>t.id!==id);if(_setToasts)_setToasts([..._toasts]);},3500);};
+function Toasts(){const [ts,setTs]=useState([]);useEffect(()=>{_setToasts=setTs;},[]);const colors={'s':'#16a34a','e':'#dc2626','i':'#0369a1','w':'#d97706'};return(<div className="toast-wrap">{ts.map(t=>(<div key={t.id} className="toast" style={{background:colors[t.type]||colors.s}}>{t.msg}</div>))}</div>);}
+
+/* ══ EMBED HELPER ══ */
+const embedUrl=url=>{if(!url)return'';const m=url.match(/\/d\/([a-zA-Z0-9_-]{10,})/)||url.match(/[?&]id=([a-zA-Z0-9_-]{10,})/);if(m)return`https://drive.google.com/file/d/${m[1]}/preview`;return`https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;};
+const dlUrl=url=>{if(!url)return'';const m=url.match(/\/d\/([a-zA-Z0-9_-]{10,})/)||url.match(/[?&]id=([a-zA-Z0-9_-]{10,})/);if(m)return`https://drive.google.com/uc?export=download&id=${m[1]}`;return url;};
+
+/* ══════════════════════════════════════════════
+   PDF MODAL
+══════════════════════════════════════════════ */
+function PdfModal({paper,onClose}){
+  const b=bOf(paper.branch);
+  return(
+    <div className="overlay" onClick={onClose}>
+      <div style={{background:'#fff',borderRadius:20,width:'100%',maxWidth:900,maxHeight:'92vh',display:'flex',flexDirection:'column',overflow:'hidden',boxShadow:'var(--sh-xl)'}} onClick={e=>e.stopPropagation()}>
+        <div style={{background:`linear-gradient(100deg,${b.dark},${b.color})`,padding:'1rem 1.5rem',display:'flex',justifyContent:'space-between',alignItems:'center',flexShrink:0,gap:'.75rem'}}>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{color:'#fff',fontWeight:700,fontSize:'1rem',lineHeight:1.3,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{paper.subject}</div>
+            <div style={{color:'rgba(255,255,255,.65)',fontSize:'.75rem',marginTop:2}}>{paper.branch} · Sem {paper.sem} · {paper.year} · {paper.code}</div>
+          </div>
+          <div style={{display:'flex',gap:'.5rem',flexShrink:0}}>
+            <a href={paper.pdfUrl} target="_blank" rel="noreferrer" style={{background:'rgba(255,255,255,.2)',border:'1px solid rgba(255,255,255,.3)',color:'#fff',padding:'.4rem .75rem',borderRadius:8,fontWeight:700,fontSize:'.78rem',textDecoration:'none'}}>↗</a>
+            <button onClick={onClose} style={{background:'rgba(255,255,255,.15)',border:'none',color:'#fff',width:34,height:34,borderRadius:'50%',cursor:'pointer',fontSize:'1.1rem'}}>✕</button>
+          </div>
+        </div>
+        <div style={{flex:1,minHeight:500,background:'#e5e7eb'}}>
+          <iframe src={embedUrl(paper.pdfUrl)} style={{width:'100%',height:'100%',minHeight:500,border:'none'}} title="PDF Viewer" loading="eager"/>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════
+   NAVBAR
+══════════════════════════════════════════════ */
+function Navbar({page,nav,user,logout}){
+  const tabs=[['home','🏠','Home'],['browse','📂','Browse'],['manual','📖','Manual'],['syllabus','📋','Syllabus'],['manualpdf','📥','Manual PDF']];
+  return(
+    <nav className="nav-root">
+      <div className="nav-top">
+        <div className="nav-logo" onClick={()=>nav('home')}>
+          <div className="nav-logo-icon">📚</div>
+          <div className="nav-logo-text">MSBTE<span className="nav-logo-sub">Study Portal</span></div>
+        </div>
+        <div className="nav-tabs">
+          {tabs.map(([p,icon,label])=>(
+            <button key={p} onClick={()=>nav(p)} className={`nav-tab${page===p?' active':''}`}>
+              <span>{icon}</span>{label}
+            </button>
+          ))}
+        </div>
+        <div className="nav-actions">
+          {user
+            ?<>
+              <button onClick={()=>nav('admin')} className="nav-btn">⚙ Admin</button>
+              <button onClick={logout} style={{background:'rgba(220,38,38,.2)',border:'1px solid rgba(220,38,38,.35)',color:'#fca5a5',padding:'.35rem .75rem',borderRadius:7,cursor:'pointer',fontWeight:600,fontSize:'.75rem',fontFamily:'Inter'}}>✕ Out</button>
+            </>
+            :<button onClick={()=>nav('login')} className="nav-btn-orange">Admin Login</button>
+          }
+        </div>
+      </div>
+      <div className="mob-tabbar">
+        <div className="mob-tabbar-inner">
+          {tabs.map(([p,icon,label])=>(
+            <button key={p} onClick={()=>nav(p)} className={`mob-tab${page===p?' active':''}`}>
+              <span className="mob-tab-icon">{icon}</span>{label}
+            </button>
+          ))}
+          {user&&<button onClick={()=>nav('admin')} className={`mob-tab${page==='admin'?' active':''}`}><span className="mob-tab-icon">⚙</span>Admin</button>}
+        </div>
+      </div>
+    </nav>
+  );
+}
+
+/* ══════════════════════════════════════════════
+   HOME PAGE
+══════════════════════════════════════════════ */
+function HomePage({papers,nav}){
+  const sections=[
+    {key:'browse',icon:'📂',title:'Model Answer Papers',color:'#0d3278',bg:'#dbeafe',desc:'Download semester-wise model answer papers for all MSBTE diploma branches. Year-wise papers with full solutions.',tag:'700+ Papers Available',btn:'Browse Papers →'},
+    {key:'manual',icon:'📖',title:'Practical Manuals',color:'#065f46',bg:'#d1fae5',desc:'Complete practical manual solutions for lab experiments. Subject-wise organized for easy access during practical exams.',tag:'All Subjects Covered',btn:'View Manuals →'},
+    {key:'syllabus',icon:'📋',title:'Syllabus',color:'#581c87',bg:'#ede9fe',desc:'Official K-Scheme syllabus for all branches. Subject codes, units, and course outcomes — semester 1 to 6.',tag:'K Scheme Updated',btn:'View Syllabus →'},
+    {key:'manualpdf',icon:'📥',title:'Manual PDFs',color:'#92400e',bg:'#fef3c7',desc:'Downloadable subject manual PDFs. Save them offline and access anytime without internet connection.',tag:'Free Downloads',btn:'Download PDFs →'},
+  ];
+  return(
+    <div className="page-wrap">
+      {/* Hero */}
+      <div className="hero" style={{marginBottom:'1.5rem',textAlign:'center'}}>
+        <div style={{position:'relative',zIndex:1}}>
+          <div style={{display:'inline-flex',alignItems:'center',gap:'.375rem',background:'rgba(249,115,22,.2)',border:'1px solid rgba(249,115,22,.4)',padding:'.4rem 1rem',borderRadius:9999,marginBottom:'1rem'}}>
+            <span style={{fontSize:'.7rem',fontWeight:800,color:'#fed7aa',letterSpacing:'1.5px',textTransform:'uppercase'}}>🎓 FREE — ALL BRANCHES — K SCHEME</span>
+          </div>
+          <h1 style={{fontSize:'clamp(1.6rem,4vw,2.75rem)',fontWeight:900,fontFamily:"'Space Grotesk',sans-serif",marginBottom:'.625rem',lineHeight:1.15}}>MSBTE Study Portal</h1>
+          <p style={{opacity:.78,fontSize:'clamp(.875rem,2.5vw,1rem)',margin:'0 auto 1.5rem',maxWidth:480,lineHeight:1.6}}>Model answers, practicals, syllabus & manuals — everything for MSBTE diploma students in one place.</p>
+          <div style={{display:'flex',gap:'.625rem',justifyContent:'center',flexWrap:'wrap'}}>
+            <button onClick={()=>nav('browse')} style={{background:'#f97316',border:'none',color:'#fff',padding:'.75rem 1.75rem',borderRadius:10,fontWeight:800,cursor:'pointer',fontSize:'.9375rem',fontFamily:'Inter'}}>📂 Browse Papers</button>
+            <button onClick={()=>nav('syllabus')} style={{background:'rgba(255,255,255,.18)',border:'1.5px solid rgba(255,255,255,.35)',color:'#fff',padding:'.75rem 1.75rem',borderRadius:10,fontWeight:700,cursor:'pointer',fontSize:'.9375rem',fontFamily:'Inter'}}>📋 View Syllabus</button>
+          </div>
+          <div style={{display:'flex',gap:'clamp(.875rem,3vw,2rem)',justifyContent:'center',marginTop:'1.5rem',flexWrap:'wrap'}}>
+            {[['700+','Papers'],['7','Branches'],['6','Semesters'],['Free','Always']].map(([v,l])=>(
+              <div key={l} style={{textAlign:'center'}}>
+                <div style={{fontSize:'clamp(1.25rem,3vw,1.75rem)',fontWeight:900,color:'#fb923c',fontFamily:"'Space Grotesk',sans-serif",lineHeight:1}}>{v}</div>
+                <div style={{fontSize:'.7rem',color:'rgba(255,255,255,.6)',letterSpacing:'.5px',marginTop:2}}>{l}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* What's Available */}
+      <div style={{marginBottom:'1.5rem'}}>
+        <div style={{textAlign:'center',marginBottom:'1.25rem'}}>
+          <h2 style={{fontSize:'clamp(1.125rem,3vw,1.5rem)',fontWeight:800,fontFamily:"'Space Grotesk',sans-serif",color:'var(--g900)'}}>What's Available</h2>
+          <p style={{color:'var(--g500)',fontSize:'.875rem',marginTop:'.25rem'}}>Everything you need for MSBTE diploma preparation</p>
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(min(260px,100%),1fr))',gap:'1rem'}}>
+          {sections.map((s,i)=>(
+            <div key={s.key} onClick={()=>nav(s.key)}
+              style={{background:'#fff',borderRadius:16,padding:'1.375rem',border:'2px solid var(--g100)',boxShadow:'var(--sh-sm)',cursor:'pointer',transition:'all .2s',animation:`fadeUp ${.3+i*.08}s ease`}}
+              onMouseEnter={e=>{e.currentTarget.style.borderColor=s.color;e.currentTarget.style.transform='translateY(-4px)';e.currentTarget.style.boxShadow='0 12px 32px rgba(0,0,0,.1)';}}
+              onMouseLeave={e=>{e.currentTarget.style.borderColor='var(--g100)';e.currentTarget.style.transform='none';e.currentTarget.style.boxShadow='var(--sh-sm)';}}>
+              <div style={{display:'flex',alignItems:'center',gap:'.875rem',marginBottom:'.875rem'}}>
+                <div style={{width:48,height:48,borderRadius:14,background:s.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.5rem',flexShrink:0}}>{s.icon}</div>
+                <div>
+                  <h3 style={{fontWeight:800,fontSize:'1rem',color:'var(--g900)',fontFamily:"'Space Grotesk',sans-serif",lineHeight:1.2}}>{s.title}</h3>
+                  <span style={{background:s.bg,color:s.color,fontSize:'.62rem',fontWeight:700,padding:'2px 8px',borderRadius:9999,display:'inline-block',marginTop:3}}>{s.tag}</span>
+                </div>
+              </div>
+              <p style={{fontSize:'.82rem',color:'var(--g500)',lineHeight:1.55,marginBottom:'.875rem'}}>{s.desc}</p>
+              <div style={{display:'flex',alignItems:'center',justifyContent:'flex-end'}}>
+                <span style={{color:s.color,fontWeight:700,fontSize:'.8rem'}}>{s.btn}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+
+      {/* ── Helper: Branch Section Block ── */}
+      {(()=>{
+        const SectionBlock=({tag,title,sub,btnLabel,btnNav,branches,branchClick,cols2=false,accent='#0d3278'})=>(
+          <div style={{background:'#fff',borderRadius:20,border:'1px solid #eef2ff',boxShadow:'0 2px 16px rgba(13,50,120,.07)',overflow:'hidden',marginBottom:'1.5rem'}}>
+            <div style={{background:`linear-gradient(100deg,${accent},#1a4fa0)`,padding:'1.375rem 1.75rem',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:'.75rem',position:'relative',overflow:'hidden'}}>
+              <div style={{position:'absolute',right:-30,top:-30,width:120,height:120,borderRadius:'50%',background:'rgba(255,255,255,.06)',pointerEvents:'none'}}/>
+              <div style={{position:'relative'}}>
+                <p style={{fontSize:'.62rem',fontWeight:800,color:'#fed7aa',letterSpacing:'1px',textTransform:'uppercase',marginBottom:'.375rem'}}>{tag}</p>
+                <h2 style={{color:'#fff',fontWeight:900,fontSize:'clamp(1.1rem,3vw,1.45rem)',fontFamily:"'Space Grotesk',sans-serif",lineHeight:1.2}}>{title}</h2>
+                <p style={{color:'rgba(255,255,255,.62)',fontSize:'.8rem',marginTop:'.25rem'}}>{sub}</p>
+              </div>
+              <button onClick={()=>nav(btnNav)} style={{background:'#f97316',border:'none',color:'#fff',padding:'.55rem 1.375rem',borderRadius:9999,fontWeight:700,cursor:'pointer',fontFamily:'Inter',fontSize:'.82rem',whiteSpace:'nowrap',flexShrink:0,position:'relative'}}>
+                {btnLabel} →
+              </button>
+            </div>
+            <div style={{padding:'1.25rem 1.5rem'}}>
+              <p style={{fontWeight:800,fontSize:'.7rem',color:'#94a3b8',textTransform:'uppercase',letterSpacing:'1.5px',marginBottom:'1rem'}}>Select Your Branch</p>
+              <div style={{display:'grid',gridTemplateColumns:cols2?'repeat(2,1fr)':'repeat(auto-fill,minmax(min(160px,45%),1fr))',gap:'.875rem'}}>
+                {branches.map((br,i)=>(
+                  <div key={br.code} onClick={()=>branchClick(br.code)}
+                    style={{background:'#fafbff',borderRadius:16,padding:'1.25rem .875rem',cursor:'pointer',textAlign:'center',border:'2px solid #eef2ff',transition:'all .2s',animation:`fadeUp ${.3+i*.06}s ease both`}}
+                    onMouseEnter={e=>{e.currentTarget.style.background='#eff6ff';e.currentTarget.style.border='2px solid #93c5fd';e.currentTarget.style.transform='translateY(-4px)';e.currentTarget.style.boxShadow='0 8px 24px rgba(13,50,120,.13)';}}
+                    onMouseLeave={e=>{e.currentTarget.style.background='#fafbff';e.currentTarget.style.border='2px solid #eef2ff';e.currentTarget.style.transform='none';e.currentTarget.style.boxShadow='none';}}>
+                    <div style={{width:52,height:52,borderRadius:15,background:'linear-gradient(135deg,#dbeafe,#eff6ff)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.625rem',margin:'0 auto .75rem',boxShadow:'0 3px 10px rgba(26,79,160,.1)'}}>{br.icon}</div>
+                    <div style={{fontWeight:800,color:'#0f172a',fontSize:'.9375rem',fontFamily:"'Space Grotesk',sans-serif",marginBottom:'.2rem'}}>{br.code}</div>
+                    <div style={{fontSize:'.7rem',color:'#64748b',lineHeight:1.3,marginBottom:'.5rem'}}>{br.name}</div>
+                    <span style={{background:'#eff6ff',color:'#1a4fa0',fontSize:'.67rem',fontWeight:700,padding:'3px 10px',borderRadius:9999,border:'1px solid #bfdbfe'}}>6 Sems</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+
+        return(<>
+          {/* Manual Answer Papers */}
+          <SectionBlock
+            tag="K SCHEME — PRACTICAL MANUAL ANSWERS"
+            title="📖 Manual Answer Papers"
+            sub="K Scheme practical manual answers — branch and semester wise"
+            btnLabel="View All" btnNav="manual"
+            branches={MBRANCHES}
+            branchClick={()=>nav('manual')}
+          />
+
+          {/* Syllabus */}
+          <SectionBlock
+            tag="MSBTE K SCHEME SYLLABUS"
+            title="📋 Syllabus"
+            sub="Official K-Scheme syllabus — subject codes, units and outcomes"
+            btnLabel="View All" btnNav="syllabus"
+            accent="#1e1b4b"
+            branches={SYLLABUS_BRANCHES.map(b=>({...b,short:b.name}))}
+            branchClick={()=>nav('syllabus')}
+          />
+
+          
+          {/* How to Use */}
+          <div style={{background:'linear-gradient(135deg,#0d3278,#1a4fa0)',borderRadius:18,padding:'clamp(1.25rem,4vw,2rem)',color:'#fff',marginBottom:'1.5rem'}}>
+            <h2 style={{fontSize:'clamp(1rem,2.5vw,1.25rem)',fontWeight:800,fontFamily:"'Space Grotesk',sans-serif",marginBottom:'1rem',textAlign:'center'}}>📌 How to Use This Portal</h2>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(min(200px,100%),1fr))',gap:'.875rem'}}>
+              {[['1','Select Branch','Choose your engineering branch'],['2','Choose Semester','Pick semester 1 to 6'],['3','Select Subject','Find your subject from the list'],['4','View / Download','Open PDF online or download']].map(([n,t,d])=>(
+                <div key={n} style={{display:'flex',gap:'.75rem',alignItems:'flex-start'}}>
+                  <div style={{width:28,height:28,borderRadius:'50%',background:'#f97316',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:900,fontSize:'.875rem',flexShrink:0,marginTop:2}}>{n}</div>
+                  <div><p style={{fontWeight:700,fontSize:'.875rem',marginBottom:2}}>{t}</p><p style={{opacity:.65,fontSize:'.78rem',lineHeight:1.5}}>{d}</p></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>);
+      })()}
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════
+   BROWSE PAGE
+══════════════════════════════════════════════ */
+function BrowsePage({papers,onView,isAdmin,onDel}){
+  const [selB,setSelB]=useState(null);
+  const [selS,setSelS]=useState(null);
+  const [selSubject,setSelSubject]=useState(null);
+  const b=selB?bOf(selB):null;
+
+  if(!selB)return(
+    <div className="page-wrap">
+      <h2 style={{fontSize:'clamp(1.25rem,4vw,1.75rem)',fontWeight:800,fontFamily:"'Space Grotesk',sans-serif",marginBottom:'1.5rem'}}>Browse by Branch</h2>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(min(140px,45%),1fr))',gap:'1rem'}}>
+        {MODEL_ANSWER_BRANCHES.map(br=>(
+          <div key={br.code} onClick={()=>setSelB(br.code)} style={{background:'#fff',borderRadius:16,padding:'1.375rem 1rem',cursor:'pointer',textAlign:'center',border:'2px solid transparent',boxShadow:'var(--sh-sm)',transition:'all .2s'}} onMouseEnter={e=>{e.currentTarget.style.borderColor=br.color;e.currentTarget.style.transform='translateY(-4px)';}} onMouseLeave={e=>{e.currentTarget.style.borderColor='transparent';e.currentTarget.style.transform='none';}}>
+            <div style={{fontSize:'2rem',marginBottom:'.5rem'}}>{br.icon}</div>
+            <div style={{fontWeight:800,color:br.color,fontSize:'1.0625rem',fontFamily:"'Space Grotesk',sans-serif"}}>{br.code}</div>
+            <div style={{fontSize:'.75rem',color:'var(--g500)',marginTop:3}}>{br.name}</div>
+            <div style={{marginTop:'.5rem',background:br.bg,color:br.dark,fontSize:'.7rem',fontWeight:700,padding:'2px 8px',borderRadius:9999,display:'inline-block'}}>{papers.filter(p=>p.branch===br.code).length} papers</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  if(!selS)return(
+    <div className="page-wrap">
+      <div style={{display:'flex',alignItems:'center',gap:'1rem',marginBottom:'1.75rem',flexWrap:'wrap'}}>
+        <button className="back-btn" onClick={()=>setSelB(null)}>← Back</button>
+        <h2 style={{fontSize:'1.5rem',fontWeight:800,fontFamily:"'Space Grotesk',sans-serif"}}>{b.icon} {b.name}</h2>
+      </div>
+      <div style={{display:'flex',flexWrap:'wrap',gap:'.625rem'}}>
+        {SEMS.map(s=>(
+          <button key={s} onClick={()=>setSelS(s)} style={{background:'#fff',border:'2px solid var(--g200)',borderRadius:14,padding:'1rem',cursor:'pointer',fontFamily:'Inter',flex:'1 1 calc(33% - .5rem)',minWidth:80,maxWidth:160,textAlign:'center',transition:'all .2s',boxShadow:'var(--sh-sm)'}} onMouseEnter={e=>{e.currentTarget.style.borderColor=b.color;e.currentTarget.style.transform='translateY(-3px)';}} onMouseLeave={e=>{e.currentTarget.style.borderColor='var(--g200)';e.currentTarget.style.transform='none';}}>
+            <div style={{fontSize:'2rem',fontWeight:900,color:b.color,fontFamily:"'Space Grotesk',sans-serif"}}>{s}</div>
+            <div style={{fontSize:'.8rem',color:'var(--g500)',marginTop:4}}>Semester {s}</div>
+            <div style={{marginTop:8,background:b.bg,color:b.dark,fontSize:'.7rem',fontWeight:700,padding:'2px 10px',borderRadius:9999,display:'inline-block'}}>{papers.filter(p=>p.branch===selB&&p.sem===s).length} papers</div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  const filtered=papers.filter(p=>p.branch===selB&&p.sem===selS);
+  const grouped={};filtered.forEach(p=>{if(!grouped[p.subject])grouped[p.subject]=[];grouped[p.subject].push(p);});
+  const subjects=Object.keys(grouped).sort();
+
+  if(!selSubject)return(
+    <div className="page-wrap">
+      <div style={{display:'flex',alignItems:'center',gap:'1rem',marginBottom:'1.75rem',flexWrap:'wrap'}}>
+        <button className="back-btn" onClick={()=>setSelS(null)}>← Back</button>
+        <h2 style={{fontSize:'1.375rem',fontWeight:800,fontFamily:"'Space Grotesk',sans-serif"}}>{b.icon} {b.name} — Semester {selS}</h2>
+      </div>
+      {subjects.length===0
+        ?<div className="empty"><div className="empty-icon">📂</div><p style={{fontWeight:700,color:'var(--g600)'}}>No subjects found</p></div>
+        :<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(min(260px,100%),1fr))',gap:'1.25rem'}}>
+          {subjects.map((subject,i)=>{
+            const sp=grouped[subject];
+            return(
+              <div key={subject} onClick={()=>setSelSubject(subject)}
+                style={{background:'#fff',borderRadius:22,padding:0,cursor:'pointer',border:'1.5px solid #e8f0fe',boxShadow:'0 4px 20px rgba(13,50,120,.08)',transition:'all .25s cubic-bezier(.4,0,.2,1)',animation:`fadeUp ${.3+i*.05}s ease`,overflow:'hidden',position:'relative',display:'flex',flexDirection:'column'}}
+                onMouseEnter={e=>{e.currentTarget.style.borderColor='#1a4fa0';e.currentTarget.style.transform='translateY(-6px)';e.currentTarget.style.boxShadow='0 20px 48px rgba(13,50,120,.18)';e.currentTarget.querySelector('.card-glow').style.opacity='1';e.currentTarget.querySelector('.view-btn').style.background='linear-gradient(135deg,#0d3278,#1a4fa0)';e.currentTarget.querySelector('.view-btn').style.color='#fff';e.currentTarget.querySelector('.view-btn').style.borderColor='#1a4fa0';}}
+                onMouseLeave={e=>{e.currentTarget.style.borderColor='#e8f0fe';e.currentTarget.style.transform='none';e.currentTarget.style.boxShadow='0 4px 20px rgba(13,50,120,.08)';e.currentTarget.querySelector('.card-glow').style.opacity='0';e.currentTarget.querySelector('.view-btn').style.background='#eff6ff';e.currentTarget.querySelector('.view-btn').style.color='#1a4fa0';e.currentTarget.querySelector('.view-btn').style.borderColor='#dbeafe';}}>
+                {/* Glow on hover */}
+                <div className="card-glow" style={{position:'absolute',inset:0,background:'linear-gradient(135deg,rgba(59,130,246,.04),rgba(13,50,120,.06))',opacity:0,transition:'opacity .25s',pointerEvents:'none',borderRadius:22}}/>
+                {/* Top colour strip */}
+                <div style={{height:5,background:`linear-gradient(90deg,${['#1a4fa0','#2563eb','#0d3278','#3b82f6','#1e40af','#0369a1','#0891b2','#7c3aed'][i%8]},${['#60a5fa','#93c5fd','#3b82f6','#6366f1','#38bdf8','#818cf8','#a78bfa','#34d399'][i%8]})`,flexShrink:0}}/>
+                {/* Card body */}
+                <div style={{padding:'1.375rem 1.375rem 1.25rem',flex:1,display:'flex',flexDirection:'column',gap:'.875rem'}}>
+                  {/* Icon area — paper doc only */}
+                  <div style={{width:68,height:68,borderRadius:18,background:'linear-gradient(135deg,#eff6ff,#dbeafe)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:'0 4px 14px rgba(26,79,160,.12)',position:'relative',overflow:'hidden'}}>
+                    <div style={{position:'absolute',top:-8,right:-8,width:28,height:28,borderRadius:'50%',background:'rgba(59,130,246,.1)'}}/>
+                    <svg width="36" height="44" viewBox="0 0 36 44" fill="none">
+                      <rect x="2" y="2" width="32" height="40" rx="4" fill="white" stroke="#bfdbfe" strokeWidth="1.2"/>
+                      <rect x="2" y="2" width="32" height="11" rx="4" fill={`url(#ga${i})`}/>
+                      <defs>
+                        <linearGradient id={`ga${i}`} x1="2" y1="2" x2="34" y2="13">
+                          <stop stopColor={['#1a4fa0','#2563eb','#0d3278','#7c3aed','#0369a1','#0891b2','#1e40af','#3b82f6'][i%8]}/>
+                          <stop offset="1" stopColor={['#60a5fa','#93c5fd','#3b82f6','#a78bfa','#38bdf8','#6366f1','#818cf8','#2dd4bf'][i%8]}/>
+                        </linearGradient>
+                      </defs>
+                      <rect x="7" y="17" width="22" height="2" rx="1" fill="#bfdbfe"/>
+                      <rect x="7" y="22" width="16" height="2" rx="1" fill="#dbeafe"/>
+                      <rect x="7" y="27" width="19" height="2" rx="1" fill="#e0f2fe"/>
+                      <rect x="7" y="32" width="12" height="2" rx="1" fill="#f0f9ff"/>
+                      <circle cx="29" cy="36" r="6" fill={['#1a4fa0','#2563eb','#0d3278','#7c3aed','#0369a1','#0891b2','#1e40af','#3b82f6'][i%8]}/>
+                      <path d="M26.5 36h5M30 34.2l2 1.8-2 1.8" stroke="white" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  {/* Subject name */}
+                  <h3 style={{fontSize:'.9375rem',fontWeight:800,fontFamily:"'Space Grotesk',sans-serif",color:'#0f172a',lineHeight:1.4,overflow:'hidden',textOverflow:'ellipsis',display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',flex:1}}>{subject}</h3>
+                  {/* Footer */}
+                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',paddingTop:'.75rem',borderTop:'1px solid #f0f6ff'}}>
+                    <div style={{display:'flex',alignItems:'center',gap:'.375rem'}}>
+                      <div style={{width:6,height:6,borderRadius:'50%',background:'#22c55e'}}/>
+                      <span style={{color:'#475569',fontSize:'.78rem',fontWeight:600}}>{sp.length} variant{sp.length!==1?'s':''}</span>
+                    </div>
+                    <div className="view-btn" style={{background:'#eff6ff',color:'#1a4fa0',fontSize:'.75rem',fontWeight:700,padding:'5px 14px',borderRadius:9999,border:'1.5px solid #dbeafe',transition:'all .2s',whiteSpace:'nowrap'}}>View →</div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      }
+    </div>
+  );
+
+  const subjectPapers=grouped[selSubject]||[];
+  return(
+    <div className="page-wrap">
+      <div style={{display:'flex',alignItems:'center',gap:'1rem',marginBottom:'1.5rem',flexWrap:'wrap'}}>
+        <button className="back-btn" onClick={()=>setSelSubject(null)}>← Back</button>
+        <div>
+          <h2 style={{fontSize:'1.375rem',fontWeight:800,fontFamily:"'Space Grotesk',sans-serif",color:'var(--g900)'}}>{selSubject}</h2>
+          <p style={{color:'var(--g500)',fontSize:'.875rem',marginTop:2}}>{b.icon} {b.name} · Semester {selS} · {subjectPapers.length} variant{subjectPapers.length!==1?'s':''}</p>
+        </div>
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(min(280px,100%),1fr))',gap:'1rem'}}>
+        {subjectPapers.map((p,i)=>(
+          <div key={p.id} style={{background:'#fafbfc',borderRadius:14,padding:'1.25rem',border:'2px solid var(--g100)',transition:'all .25s',animation:`fadeUp ${.3+i*.05}s ease`}} onMouseEnter={e=>{e.currentTarget.style.background='#fff';e.currentTarget.style.borderColor='#1a4fa0aa';e.currentTarget.style.transform='translateY(-2px)';}} onMouseLeave={e=>{e.currentTarget.style.background='#fafbfc';e.currentTarget.style.borderColor='var(--g100)';e.currentTarget.style.transform='none';}}>
+            <div style={{display:'flex',justifyContent:'space-between',marginBottom:'.875rem',gap:'.5rem',flexWrap:'wrap'}}>
+              <div style={{display:'flex',gap:'.4rem',flexWrap:'wrap'}}>
+                <span style={{background:'#dbeafe',color:'#0d3278',fontSize:'.7rem',fontWeight:700,padding:'3px 10px',borderRadius:9999}}>{p.year}</span>
+                <span style={{background:'var(--g100)',color:'var(--g600)',fontSize:'.7rem',fontWeight:700,padding:'3px 10px',borderRadius:9999}}>Scheme {p.scheme}</span>
+                {p.season&&<span style={{background:p.season==='Summer'?'#fed7aa':'#bae6fd',color:p.season==='Summer'?'#9a3412':'#0c4a6e',fontSize:'.68rem',fontWeight:700,padding:'3px 10px',borderRadius:9999}}>{p.season}</span>}
+              </div>
+              <span style={{color:'var(--g400)',fontSize:'.75rem',fontFamily:'monospace'}}>{p.code}</span>
+            </div>
+            <div style={{fontWeight:700,fontSize:'.9rem',color:'var(--g900)',marginBottom:'.875rem'}}>
+              <span style={{background:p.paperType==='Question Paper'?'#fef3c7':p.paperType==='Solving Paper'?'#e0f2fe':'#dcfce7',color:p.paperType==='Question Paper'?'#92400e':p.paperType==='Solving Paper'?'#075985':'#166534',fontSize:'.8rem',fontWeight:700,padding:'5px 12px',borderRadius:9999}}>{p.paperType||'Model Answer'}</span>
+            </div>
+            <div style={{display:'flex',gap:'.625rem',flexWrap:'wrap'}}>
+              <button onClick={()=>onView(p)} style={{background:'linear-gradient(135deg,#0d3278,#1a4fa0)',color:'#fff',border:'none',padding:'.5rem 1rem',borderRadius:9,fontWeight:700,cursor:'pointer',fontSize:'.8rem',fontFamily:'Inter',flex:1}}>👁 View PDF</button>
+              <a href={p.dlUrl||p.pdfUrl} target="_blank" rel="noreferrer" style={{background:'#fff',border:'2px solid #1a4fa044',color:'#0d3278',padding:'.5rem 1rem',borderRadius:9,fontWeight:700,fontSize:'.8rem',textDecoration:'none'}}>⬇</a>
+              {isAdmin&&<button onClick={()=>onDel(p.id)} style={{background:'#fee2e2',color:'#dc2626',border:'none',padding:'.5rem .75rem',borderRadius:9,cursor:'pointer',fontWeight:700,fontSize:'.8rem',fontFamily:'Inter'}}>🗑</button>}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════
+   LOGIN PAGE
+══════════════════════════════════════════════ */
+function LoginPage({onLogin}){
+  const [em,setEm]=useState('');const [pw,setPw]=useState('');const [busy,setBusy]=useState(false);
+  const go=async()=>{if(!em||!pw){toast('Enter email and password','e');return;}setBusy(true);try{const r=await auth.signInWithEmailAndPassword(em,pw);onLogin(r.user);toast('Logged in','s');}catch(e){toast(e.message,'e');}setBusy(false);};
+  return(
+    <div style={{minHeight:'60vh',display:'flex',alignItems:'center',justifyContent:'center',padding:'2rem var(--pad)'}}>
+      <div style={{background:'#fff',borderRadius:20,padding:'clamp(1.5rem,5vw,2.5rem)',boxShadow:'var(--sh-md)',width:'100%',maxWidth:400}}>
+        <h2 style={{fontWeight:800,fontSize:'1.5rem',fontFamily:"'Space Grotesk',sans-serif",marginBottom:'.25rem'}}>Admin Login</h2>
+        <p style={{color:'var(--g500)',fontSize:'.875rem',marginBottom:'1.5rem'}}>Sign in to manage content</p>
+        <div style={{marginBottom:'1rem'}}>
+          <label className="form-label">Email</label>
+          <input className="form-input" type="email" value={em} onChange={e=>setEm(e.target.value)} placeholder="admin@email.com"/>
+        </div>
+        <div style={{marginBottom:'1.5rem'}}>
+          <label className="form-label">Password</label>
+          <input className="form-input" type="password" value={pw} onChange={e=>setPw(e.target.value)} onKeyDown={e=>e.key==='Enter'&&go()} placeholder="••••••••"/>
+        </div>
+        <button onClick={go} disabled={busy} style={{width:'100%',background:'linear-gradient(135deg,#0d3278,#1a4fa0)',color:'#fff',border:'none',padding:'.875rem',borderRadius:11,fontWeight:800,cursor:'pointer',fontSize:'1rem',fontFamily:'Inter',opacity:busy?.6:1}}>{busy?'Signing in...':'Sign In'}</button>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════
+   ADMIN PANEL
+══════════════════════════════════════════════ */
+function AdminPanel({papers,onAdd,onDel}){
+  const [tab,setTab]=useState('add');
+  const [f,setF]=useState({branch:'AU',sem:1,subject:'',code:'',pdfUrl:'',dlUrl:'',year:'2025',scheme:'K',paperType:'Model Answer',season:'Winter'});
+  const [busy,setBusy]=useState(false);
+  const [messages,setMessages]=useState([]);
+  useEffect(()=>{if(tab==='messages')db.collection('contactMessages').orderBy('ts','desc').get().then(s=>setMessages(s.docs.map(d=>({id:d.id,...d.data()}))));},[tab]);
+  const submit=async()=>{if(!f.subject||!f.pdfUrl){toast('Subject and PDF URL required','e');return;}setBusy(true);try{const p=await fbAdd(f);onAdd(p);toast('Paper added!','s');setF(prev=>({...prev,subject:'',code:'',pdfUrl:'',dlUrl:''}));}catch(e){toast(e.message,'e');}setBusy(false);};
+  return(
+    <div className="page-wrap-sm">
+      <h2 style={{fontSize:'1.75rem',fontWeight:800,fontFamily:"'Space Grotesk',sans-serif",marginBottom:'1.5rem'}}>Admin Panel</h2>
+      <div style={{display:'flex',gap:'.5rem',marginBottom:'1.5rem',flexWrap:'wrap',overflowX:'auto',paddingBottom:'.25rem',scrollbarWidth:'none'}}>
+        {[['add','Add Paper'],['list','All Papers'],['syllabus','Syllabi'],['manualpdf','Manual PDFs'],['messages','Messages']].map(([t,l])=>(
+          <button key={t} onClick={()=>setTab(t)} style={{background:tab===t?'linear-gradient(135deg,#0d3278,#1a4fa0)':'#fff',color:tab===t?'#fff':'var(--g700)',border:'2px solid '+(tab===t?'transparent':'var(--g200)'),padding:'.625rem 1.25rem',borderRadius:10,fontWeight:700,cursor:'pointer',fontFamily:'Inter',fontSize:'.875rem',position:'relative',whiteSpace:'nowrap'}}>
+            {l}
+            {t==='messages'&&messages.filter(m=>m.status==='new').length>0&&<span style={{position:'absolute',top:-6,right:-6,background:'#dc2626',color:'#fff',fontSize:'.7rem',fontWeight:800,padding:'2px 6px',borderRadius:9999,minWidth:20,textAlign:'center'}}>{messages.filter(m=>m.status==='new').length}</span>}
+          </button>
+        ))}
+      </div>
+      {tab==='add'&&(
+        <div style={{background:'#fff',borderRadius:18,padding:'1.5rem',boxShadow:'var(--sh-sm)',maxWidth:640}}>
+          <h3 style={{fontWeight:800,fontSize:'1.125rem',marginBottom:'1.5rem',fontFamily:"'Space Grotesk',sans-serif"}}>Add New Paper</h3>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))',gap:'0 1rem'}}>
+            {[['Branch','branch',MODEL_ANSWER_BRANCHES.map(b=>b.code)],['Semester','sem',[1,2,3,4,5,6]],['Year','year',['2025','2024','2023','2022','2021']],['Scheme','scheme',['K','I','J','G']],['Paper Type','paperType',['Model Answer','Question Paper','Solving Paper']],['Season','season',['Winter','Summer']]].map(([lbl,key,opts])=>(
+              <div key={key} style={{marginBottom:'.875rem'}}>
+                <label className="form-label">{lbl}</label>
+                <select className="form-select" value={f[key]} onChange={e=>setF({...f,[key]:key==='sem'?+e.target.value:e.target.value})}>{opts.map(o=><option key={o}>{o}</option>)}</select>
+              </div>
+            ))}
+          </div>
+          {[['Subject Name *','subject'],['Subject Code','code'],['PDF URL *','pdfUrl'],['Download URL (optional)','dlUrl']].map(([lbl,key])=>(
+            <div key={key} style={{marginBottom:'.875rem'}}>
+              <label className="form-label">{lbl}</label>
+              <input className="form-input" value={f[key]} onChange={e=>setF({...f,[key]:e.target.value})}/>
+            </div>
+          ))}
+          <button onClick={submit} disabled={busy} style={{background:'linear-gradient(135deg,#0d3278,#1a4fa0)',color:'#fff',border:'none',padding:'.875rem 2rem',borderRadius:11,fontWeight:800,cursor:'pointer',fontSize:'1rem',fontFamily:'Inter',opacity:busy?.6:1}}>{busy?'Adding...':'Add Paper'}</button>
+        </div>
+      )}
+      {tab==='list'&&(
+        <div style={{background:'#fff',borderRadius:18,boxShadow:'var(--sh-sm)',overflow:'hidden'}}>
+          <div className="tbl-wrap">
+            <table className="tbl">
+              <thead><tr>{['Branch','Sem','Subject','Code','Year','Type','Season',''].map(h=><th key={h}>{h}</th>)}</tr></thead>
+              <tbody>{papers.map(p=><tr key={p.id}><td>{p.branch}</td><td>{p.sem}</td><td style={{maxWidth:200,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.subject}</td><td>{p.code}</td><td>{p.year}</td><td>{p.paperType}</td><td>{p.season}</td><td><button onClick={()=>onDel(p.id)} style={{background:'#fee2e2',color:'#dc2626',border:'none',padding:'.3rem .625rem',borderRadius:6,cursor:'pointer',fontWeight:700,fontSize:'.75rem',fontFamily:'Inter'}}>🗑</button></td></tr>)}</tbody>
+            </table>
+          </div>
+        </div>
+      )}
+      {tab==='syllabus'&&<div style={{background:'#fff',borderRadius:18,padding:'1.5rem',boxShadow:'var(--sh-sm)'}}><p style={{color:'var(--g500)'}}>Manage syllabus entries from the 📋 Syllabus section directly.</p></div>}
+      {tab==='manualpdf'&&<div style={{background:'#fff',borderRadius:18,padding:'1.5rem',boxShadow:'var(--sh-sm)'}}><p style={{color:'var(--g500)'}}>Manage Manual PDFs from the 📥 Manual PDF section directly.</p></div>}
+      {tab==='messages'&&(
+        <div style={{display:'flex',flexDirection:'column',gap:'1rem'}}>
+          {messages.length===0?<div className="empty"><div className="empty-icon">📧</div><p style={{fontWeight:700,color:'var(--g600)'}}>No messages yet</p></div>:messages.map(m=>(
+            <div key={m.id} style={{background:'#fff',borderRadius:14,padding:'1.25rem',boxShadow:'var(--sh-sm)',border:`2px solid ${m.status==='new'?'#bfdbfe':'var(--g100)'}`}}>
+              <div style={{display:'flex',justifyContent:'space-between',marginBottom:'.5rem',flexWrap:'wrap',gap:'.5rem'}}>
+                <span style={{fontWeight:700}}>{m.name} <span style={{color:'var(--g500)',fontWeight:400}}>({m.email})</span></span>
+                <span style={{fontSize:'.75rem',color:'var(--g400)'}}>{new Date(m.ts).toLocaleDateString()}</span>
+              </div>
+              <p style={{color:'var(--g600)',fontSize:'.875rem',lineHeight:1.6}}>{m.message}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════
+   MANUAL PAGE
+══════════════════════════════════════════════ */
+function ManualPage({isAdmin}){
+  const [selB,setSelB]=useState(null);const [selS,setSelS]=useState(null);const [subjects,setSubjects]=useState([]);const [loading,setLoading]=useState(false);const [selSubject,setSelSubject]=useState(null);const [showAdd,setShowAdd]=useState(false);const [editItem,setEditItem]=useState(null);const [af,setAf]=useState({subject:'',code:'',description:'',scheme:'K',date:'',practicals:[]});const [aBusy,setABusy]=useState(false);const [pdfView,setPdfView]=useState(null);const [inlinePrs,setInlinePrs]=useState(null); // {prs:[],saving:false}
+  const b=selB?MBRANCHES.find(x=>x.code===selB):null;
+  useEffect(()=>{if(!selB||!selS)return;setLoading(true);fbLoadManual(selB,selS).then(list=>{setSubjects(list);setLoading(false);});},[selB,selS]);
+  const openAdd=()=>{setAf({subject:'',code:'',description:'',scheme:'K',date:'',practicals:[]});setEditItem(null);setShowAdd(true);};
+  const openEdit=(item)=>{setAf({subject:item.subject||'',code:item.code||'',description:item.description||'',scheme:item.scheme||'K',date:item.date||'',practicals:item.practicals||[]});setEditItem(item);setShowAdd(true);};
+  const saveSubject=async()=>{if(!af.subject){toast('Subject name required','e');return;}setABusy(true);try{if(editItem){await fbUpdateManual(editItem.id,{...af,branch:selB,sem:selS});setSubjects(p=>p.map(x=>x.id===editItem.id?{...x,...af}:x));toast('Updated!','s');}else{const item=await fbAddManual({...af,branch:selB,sem:selS});setSubjects(p=>[...p,item]);toast('Added!','s');}setShowAdd(false);setEditItem(null);}catch(e){toast(e.message,'e');}setABusy(false);};
+  const delSubject=async(id)=>{if(!window.confirm('Delete?'))return;await fbDelManual(id);setSubjects(p=>p.filter(x=>x.id!==id));if(selSubject&&selSubject.id===id)setSelSubject(null);toast('Deleted','i');};
+  const addPractical=()=>setAf({...af,practicals:[...af.practicals,{title:'',pdfUrl:'',dlUrl:''}]});
+  const updPractical=(i,k,v)=>{const p=[...af.practicals];p[i]={...p[i],[k]:v};setAf({...af,practicals:p});};
+  const delPractical=(i)=>{const p=[...af.practicals];p.splice(i,1);setAf({...af,practicals:p});};
+  // Inline practical helpers
+  const startInline=(item)=>setInlinePrs({id:item.id,prs:[...(item.practicals||[]).map(p=>({...p}))],saving:false});
+  const addInlinePr=()=>setInlinePrs(p=>({...p,prs:[...p.prs,{title:'',pdfUrl:''}]}));
+  const updInlinePr=(i,k,v)=>setInlinePrs(p=>{const prs=[...p.prs];prs[i]={...prs[i],[k]:v};return{...p,prs};});
+  const delInlinePr=(i)=>setInlinePrs(p=>{const prs=[...p.prs];prs.splice(i,1);return{...p,prs};});
+  const saveInlinePrs=async()=>{
+    setInlinePrs(p=>({...p,saving:true}));
+    try{
+      await fbUpdateManual(inlinePrs.id,{practicals:inlinePrs.prs});
+      setSubjects(prev=>prev.map(x=>x.id===inlinePrs.id?{...x,practicals:inlinePrs.prs}:x));
+      setSelSubject(prev=>({...prev,practicals:inlinePrs.prs}));
+      setInlinePrs(null);
+      toast('Practicals saved!','s');
+    }catch(e){toast(e.message,'e');setInlinePrs(p=>({...p,saving:false}));}
+  };
+
+  if(!selB)return(
+    <div className="page-wrap-sm">
+      {/* Header banner */}
+      <div style={{background:'linear-gradient(100deg,#0d3278,#1a4fa0)',borderRadius:20,padding:'1.5rem 1.75rem',marginBottom:'1.75rem',position:'relative',overflow:'hidden'}}>
+        <div style={{position:'absolute',right:-30,top:-30,width:130,height:130,borderRadius:'50%',background:'rgba(255,255,255,.07)',pointerEvents:'none'}}/>
+        <p style={{fontSize:'.65rem',fontWeight:800,color:'#fed7aa',letterSpacing:'1px',textTransform:'uppercase',marginBottom:'.5rem'}}>K SCHEME — PRACTICAL MANUAL ANSWERS</p>
+        <h1 style={{color:'#fff',fontWeight:900,fontSize:'clamp(1.2rem,3vw,1.625rem)',fontFamily:"'Space Grotesk',sans-serif",marginBottom:'.375rem'}}>📖 Manual Answer Papers</h1>
+        <p style={{color:'rgba(255,255,255,.65)',fontSize:'.875rem',marginBottom:'1.25rem'}}>K Scheme practical manual answers — branch and semester wise</p>
+        <button onClick={()=>{}} style={{background:'#f97316',border:'none',color:'#fff',padding:'.625rem 1.5rem',borderRadius:9999,fontWeight:700,cursor:'pointer',fontFamily:'Inter',fontSize:'.875rem'}}>View All →</button>
+      </div>
+      {/* Branch heading */}
+      <p style={{fontWeight:800,fontSize:'.75rem',color:'var(--g500)',textTransform:'uppercase',letterSpacing:'1.5px',marginBottom:'1.125rem'}}>Select Your Branch</p>
+      {/* Branch grid — 2 col on mobile, auto on desktop */}
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(min(180px,45%),1fr))',gap:'1rem'}}>
+        {MBRANCHES.map((br,i)=>(
+          <div key={br.code} onClick={()=>setSelB(br.code)}
+            style={{background:'#fff',borderRadius:20,padding:'1.5rem 1rem',cursor:'pointer',textAlign:'center',border:'2px solid #eef2ff',boxShadow:'0 2px 12px rgba(13,50,120,.06)',transition:'all .22s',animation:`fadeUp ${.25+i*.07}s ease both`}}
+            onMouseEnter={e=>{e.currentTarget.style.border='2px solid #93c5fd';e.currentTarget.style.transform='translateY(-5px)';e.currentTarget.style.boxShadow='0 12px 32px rgba(13,50,120,.14)';}}
+            onMouseLeave={e=>{e.currentTarget.style.border='2px solid #eef2ff';e.currentTarget.style.transform='none';e.currentTarget.style.boxShadow='0 2px 12px rgba(13,50,120,.06)';}}>
+            <div style={{width:60,height:60,borderRadius:16,background:'linear-gradient(135deg,#dbeafe,#eff6ff)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.875rem',margin:'0 auto .875rem',boxShadow:'0 4px 12px rgba(26,79,160,.12)'}}>{br.icon}</div>
+            <div style={{fontWeight:800,color:'#0f172a',fontSize:'1rem',fontFamily:"'Space Grotesk',sans-serif",marginBottom:'.25rem'}}>{br.code}</div>
+            <div style={{fontSize:'.75rem',color:'#64748b',marginBottom:'.625rem',lineHeight:1.3}}>{br.name}</div>
+            <span style={{background:'#eff6ff',color:'#1a4fa0',fontSize:'.7rem',fontWeight:700,padding:'3px 12px',borderRadius:9999,border:'1px solid #bfdbfe'}}>6 Sems</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  if(!selS)return(
+    <div className="page-wrap-sm">
+      <div className="page-hd"><p className="page-hd-tag">K SCHEME — PRACTICAL MANUAL ANSWERS</p><h1 className="page-hd-title">📖 Manual Answer Papers</h1></div>
+      <div style={{display:'flex',alignItems:'center',gap:'1rem',marginBottom:'1.5rem',flexWrap:'wrap'}}>
+        <button className="back-btn" onClick={()=>setSelB(null)}>← Back</button>
+        <h2 style={{fontSize:'1.5rem',fontWeight:800,fontFamily:"'Space Grotesk',sans-serif"}}>{b.icon} {b.name}</h2>
+      </div>
+      <div style={{display:'flex',flexWrap:'wrap',gap:'.625rem'}}>
+        {SEMS.map(s=>(
+          <button key={s} onClick={()=>setSelS(s)} style={{background:'#fff',border:'2px solid var(--g200)',borderRadius:14,padding:'1rem',cursor:'pointer',fontFamily:'Inter',flex:'1 1 calc(33% - .5rem)',minWidth:80,maxWidth:160,textAlign:'center',transition:'all .2s',boxShadow:'var(--sh-sm)'}} onMouseEnter={e=>{e.currentTarget.style.borderColor='#1a4fa0';e.currentTarget.style.transform='translateY(-3px)';}} onMouseLeave={e=>{e.currentTarget.style.borderColor='var(--g200)';e.currentTarget.style.transform='none';}}>
+            <div style={{fontSize:'2rem',fontWeight:900,color:'#1a4fa0',fontFamily:"'Space Grotesk',sans-serif"}}>{s}</div>
+            <div style={{fontSize:'.8rem',color:'var(--g500)',marginTop:4}}>Semester {s}</div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  return(
+    <div className="page-wrap-sm">
+      {pdfView&&(
+        <div className="overlay" onClick={()=>setPdfView(null)}>
+          <div style={{background:'#fff',borderRadius:20,width:'100%',maxWidth:900,maxHeight:'92vh',display:'flex',flexDirection:'column',overflow:'hidden',boxShadow:'var(--sh-xl)'}} onClick={e=>e.stopPropagation()}>
+            <div style={{background:'linear-gradient(100deg,#0d3278,#1a4fa0)',padding:'1rem 1.5rem',display:'flex',justifyContent:'space-between',alignItems:'center',flexShrink:0}}>
+              <div style={{color:'#fff',fontWeight:700}}>{pdfView.title}</div>
+              <button onClick={()=>setPdfView(null)} style={{background:'rgba(255,255,255,.15)',border:'none',color:'#fff',width:34,height:34,borderRadius:'50%',cursor:'pointer',fontSize:'1rem'}}>✕</button>
+            </div>
+            <div style={{flex:1,minHeight:500,background:'#374151'}}><iframe src={embedUrl(pdfView.url)} style={{width:'100%',height:'100%',minHeight:500,border:'none'}} title={pdfView.title}/></div>
+          </div>
+        </div>
+      )}
+      {showAdd&&(
+        <div className="overlay" onClick={()=>setShowAdd(false)}>
+          <div className="modal" onClick={e=>e.stopPropagation()}>
+            <div className="modal-hd">
+              <div><div style={{color:'#fff',fontWeight:800,fontSize:'1rem',fontFamily:"'Space Grotesk',sans-serif"}}>{editItem?'✏️ Edit Subject':'➕ Add Subject'}</div><div style={{color:'rgba(255,255,255,.6)',fontSize:'.75rem',marginTop:2}}>{b.icon} {b.name} · Semester {selS}</div></div>
+              <button onClick={()=>setShowAdd(false)} style={{background:'rgba(255,255,255,.15)',border:'none',color:'#fff',width:34,height:34,borderRadius:'50%',cursor:'pointer',fontSize:'1rem'}}>✕</button>
+            </div>
+            <div className="modal-body">
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'1rem',marginBottom:'1rem'}}>
+                <div style={{gridColumn:'1/3'}}><label className="form-label">Subject Name *</label><input className="form-input" value={af.subject} onChange={e=>setAf({...af,subject:e.target.value})} placeholder="e.g. Data Structures"/></div>
+                <div><label className="form-label">Subject Code</label><input className="form-input" value={af.code} onChange={e=>setAf({...af,code:e.target.value})} placeholder="e.g. 22317"/></div>
+                <div><label className="form-label">Scheme</label><select className="form-select" value={af.scheme} onChange={e=>setAf({...af,scheme:e.target.value})}>{['K','I','J','G'].map(o=><option key={o}>{o}</option>)}</select></div>
+              </div>
+              <div style={{marginBottom:'1rem'}}><label className="form-label">Description</label><input className="form-input" value={af.description} onChange={e=>setAf({...af,description:e.target.value})} placeholder="Brief description"/></div>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'.75rem'}}>
+                <label style={{fontWeight:700,fontSize:'.9rem',color:'var(--g700)'}}>Practicals</label>
+                <button onClick={addPractical} style={{background:'linear-gradient(135deg,#dbeafe,#bfdbfe)',color:'#0d3278',border:'none',padding:'.4rem .875rem',borderRadius:8,fontWeight:700,cursor:'pointer',fontFamily:'Inter',fontSize:'.8rem'}}>+ Add</button>
+              </div>
+              {af.practicals.map((pr,i)=>(
+                <div key={i} style={{background:'var(--g50)',border:'2px solid var(--g200)',borderRadius:12,padding:'1rem',marginBottom:'.75rem'}}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'.625rem'}}>
+                    <span style={{fontWeight:700,fontSize:'.85rem',color:'#0d3278'}}>Practical {i+1}</span>
+                    <button onClick={()=>delPractical(i)} style={{background:'#fee2e2',color:'#dc2626',border:'none',padding:'2px 8px',borderRadius:6,cursor:'pointer',fontSize:'.75rem',fontWeight:700}}>Remove</button>
+                  </div>
+                  <input className="form-input" value={pr.title} onChange={e=>updPractical(i,'title',e.target.value)} placeholder="Practical title" style={{marginBottom:'.5rem'}}/>
+                  <input className="form-input" value={pr.pdfUrl} onChange={e=>updPractical(i,'pdfUrl',e.target.value)} placeholder="PDF URL (Google Drive)" style={{marginBottom:'.5rem'}}/>
+                  <input className="form-input" value={pr.dlUrl} onChange={e=>updPractical(i,'dlUrl',e.target.value)} placeholder="Download URL (optional)"/>
+                </div>
+              ))}
+            </div>
+            <div className="modal-ft">
+              <button onClick={saveSubject} disabled={aBusy} style={{flex:1,background:'linear-gradient(135deg,#0d3278,#1a4fa0)',color:'#fff',border:'none',padding:'.875rem',borderRadius:11,fontWeight:800,cursor:'pointer',fontFamily:'Inter',fontSize:'1rem',opacity:aBusy?.6:1}}>{aBusy?'Saving...':editItem?'Save Changes':'Add Subject'}</button>
+              <button onClick={()=>setShowAdd(false)} style={{background:'var(--g100)',color:'var(--g700)',border:'none',padding:'.875rem 1.5rem',borderRadius:11,fontWeight:600,cursor:'pointer',fontFamily:'Inter'}}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'1.5rem',flexWrap:'wrap',gap:'1rem'}}>
+        <div style={{display:'flex',alignItems:'center',gap:'1rem'}}>
+          <button className="back-btn" onClick={()=>setSelS(null)}>← Back</button>
+          <div>
+            <h2 style={{fontSize:'1.25rem',fontWeight:800,fontFamily:"'Space Grotesk',sans-serif"}}>{b.icon} {b.name} — Semester {selS}</h2>
+            <p style={{color:'var(--g500)',fontSize:'.875rem',marginTop:2}}>{subjects.length} subject{subjects.length!==1?'s':''}</p>
+          </div>
+        </div>
+        {isAdmin&&<button onClick={openAdd} style={{background:'linear-gradient(135deg,#f97316,#ea580c)',color:'#fff',border:'none',padding:'.75rem 1.5rem',borderRadius:11,fontWeight:700,cursor:'pointer',fontFamily:'Inter',fontSize:'.9rem'}}>+ Add Subject</button>}
+      </div>
+      {loading
+        ?<div style={{textAlign:'center',padding:'4rem'}}><div className="spinner"/><p style={{color:'var(--g400)',marginTop:'1rem'}}>Loading...</p></div>
+        :subjects.length===0
+          ?<div className="empty"><div className="empty-icon">📖</div><p style={{fontWeight:700,color:'var(--g600)'}}>No subjects yet</p><p style={{color:'var(--g400)',fontSize:'.875rem',marginTop:'.5rem'}}>{isAdmin?'Click "+ Add Subject" above.':'Check back later.'}</p></div>
+          :selSubject
+            ?/* ── Practical view / inline edit ── */
+              <div>
+                {/* Page header */}
+                <div style={{display:'flex',alignItems:'flex-start',gap:'1rem',marginBottom:'1.5rem',flexWrap:'wrap'}}>
+                  <button className="back-btn" onClick={()=>{setSelSubject(null);setInlinePrs(null);}}>← Back to Subjects</button>
+                  <div style={{flex:1,minWidth:0}}>
+                    <h2 style={{fontSize:'clamp(1rem,2.5vw,1.25rem)',fontWeight:800,fontFamily:"'Space Grotesk',sans-serif",color:'var(--g900)',lineHeight:1.3}}>{selSubject.subject}</h2>
+                    <p style={{color:'var(--g500)',fontSize:'.8rem',marginTop:3,display:'flex',alignItems:'center',gap:'.375rem'}}>
+                      <span>{b&&b.icon}</span><span>{b&&b.name}</span><span style={{opacity:.4}}>·</span><span>Semester {selS}</span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Subject info card */}
+                <div style={{background:'#fff',borderRadius:20,border:'1.5px solid #e2e8f0',boxShadow:'0 4px 20px rgba(13,50,120,.08)',overflow:'hidden',marginBottom:'1rem',animation:'fadeUp .2s ease',width:'100%'}}>
+                  {/* Card header row */}
+                  <div style={{display:'flex',alignItems:'center',gap:'1.25rem',padding:'1.25rem 1.5rem',borderBottom:'1px solid #f1f5f9',flexWrap:'wrap'}}>
+                    {/* Code tile */}
+                    <div style={{background:'linear-gradient(135deg,#0d3278,#1a4fa0)',borderRadius:12,padding:'.75rem 1rem',flexShrink:0,textAlign:'center',minWidth:96}}>
+                      <p style={{color:'rgba(255,255,255,.6)',fontSize:'.45rem',fontWeight:800,textTransform:'uppercase',letterSpacing:'1px',lineHeight:1}}>K SCHEME</p>
+                      <p style={{color:'#fff',fontWeight:900,fontSize:'.9rem',fontFamily:"'Space Grotesk',sans-serif",lineHeight:1.2,margin:'3px 0'}}>{selSubject.code}</p>
+                      <p style={{color:'rgba(255,255,255,.55)',fontSize:'.42rem',fontWeight:700,textTransform:'uppercase',letterSpacing:'1px'}}>MANUAL ANS</p>
+                    </div>
+                    {/* Subject info */}
+                    <div style={{flex:1,minWidth:0}}>
+                      <p style={{fontWeight:800,fontSize:'clamp(.875rem,2vw,1.0625rem)',color:'#0f172a',lineHeight:1.3}}>{selSubject.code} — {selSubject.subject}</p>
+                      <p style={{color:'#64748b',fontSize:'.78rem',marginTop:2}}>Manual Answer</p>
+                      <div style={{display:'flex',alignItems:'center',gap:'.5rem',marginTop:4}}>
+                        <span style={{color:'#f97316',fontSize:'.75rem'}}>⚡</span>
+                        <span style={{color:'#94a3b8',fontSize:'.72rem',fontWeight:700,textTransform:'uppercase',letterSpacing:'.5px'}}>MSBTE PAPERS</span>
+                      </div>
+                    </div>
+                    {/* Right actions */}
+                    <div style={{display:'flex',alignItems:'center',gap:'.625rem',flexShrink:0}}>
+                      {isAdmin&&<button onClick={()=>delSubject(selSubject.id)} style={{background:'#fff0f0',color:'#dc2626',border:'1.5px solid #fca5a5',padding:'.375rem .75rem',borderRadius:8,fontWeight:700,cursor:'pointer',fontSize:'.78rem',fontFamily:'Inter'}}>Del</button>}
+                      <span style={{color:'#64748b',fontSize:'.82rem',fontWeight:600}}>{(selSubject.practicals||[]).length} Practical{(selSubject.practicals||[]).length!==1?'s':''}</span>
+                      {isAdmin&&!inlinePrs&&<button onClick={()=>startInline(selSubject)} style={{background:'none',border:'none',color:'#1a4fa0',fontWeight:700,cursor:'pointer',fontSize:'.82rem',fontFamily:'Inter',textDecoration:'underline',textDecorationColor:'#bfdbfe',textUnderlineOffset:3}}>✎ Edit practicals</button>}
+                      {inlinePrs&&<button onClick={()=>setInlinePrs(null)} style={{background:'none',border:'none',color:'#64748b',fontWeight:600,cursor:'pointer',fontSize:'.78rem',fontFamily:'Inter'}}>▲ Hide</button>}
+                    </div>
+                  </div>
+
+                  {/* ── Inline edit mode (admin) ── */}
+                  {inlinePrs&&(
+                    <div style={{padding:'1rem 1.25rem',background:'#fafbff',borderBottom:'1px solid #f1f5f9'}}>
+                      <div style={{display:'flex',flexDirection:'column',gap:'.625rem',marginBottom:'.875rem'}}>
+                        {inlinePrs.prs.map((pr,j)=>(
+                          <div key={j} style={{display:'flex',alignItems:'center',gap:'.625rem',background:'#fff',borderRadius:12,border:'1.5px solid #e2e8f0',padding:'.625rem .875rem',flexWrap:'wrap'}}>
+                            <div style={{width:28,height:28,borderRadius:'50%',background:'linear-gradient(135deg,#0d3278,#1a4fa0)',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontWeight:800,fontSize:'.78rem',flexShrink:0}}>{j+1}</div>
+                            <input value={pr.title} onChange={e=>updInlinePr(j,'title',e.target.value)} placeholder={`Practical ${j+1} title`} style={{flex:2,minWidth:120,padding:'.45rem .75rem',border:'1.5px solid #e2e8f0',borderRadius:8,fontSize:'.82rem',fontFamily:'Inter',outline:'none'}} onFocus={e=>e.target.style.borderColor='#1a4fa0'} onBlur={e=>e.target.style.borderColor='#e2e8f0'}/>
+                            <input value={pr.pdfUrl} onChange={e=>updInlinePr(j,'pdfUrl',e.target.value)} placeholder="Google Drive PDF URL" style={{flex:3,minWidth:160,padding:'.45rem .75rem',border:'1.5px solid #e2e8f0',borderRadius:8,fontSize:'.82rem',fontFamily:'Inter',outline:'none'}} onFocus={e=>e.target.style.borderColor='#1a4fa0'} onBlur={e=>e.target.style.borderColor='#e2e8f0'}/>
+                            <button onClick={()=>delInlinePr(j)} style={{background:'#fee2e2',color:'#dc2626',border:'none',width:30,height:30,borderRadius:8,cursor:'pointer',fontWeight:700,fontSize:'.9rem',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>🗑</button>
+                          </div>
+                        ))}
+                      </div>
+                      {/* Add practical button */}
+                      <button onClick={addInlinePr} style={{width:'100%',background:'none',border:'2px dashed #c7d7fe',color:'#6366f1',padding:'.75rem',borderRadius:12,fontWeight:700,cursor:'pointer',fontFamily:'Inter',fontSize:'.875rem',display:'flex',alignItems:'center',justifyContent:'center',gap:'.5rem',transition:'all .15s',marginBottom:'.875rem'}} onMouseEnter={e=>{e.currentTarget.style.background='#eff0ff';e.currentTarget.style.borderColor='#6366f1';}} onMouseLeave={e=>{e.currentTarget.style.background='none';e.currentTarget.style.borderColor='#c7d7fe';}}>+ Add Practical</button>
+                      <div style={{display:'flex',gap:'.625rem'}}>
+                        <button onClick={saveInlinePrs} disabled={inlinePrs.saving} style={{flex:1,background:'linear-gradient(135deg,#0d3278,#1a4fa0)',color:'#fff',border:'none',padding:'.75rem',borderRadius:11,fontWeight:800,cursor:'pointer',fontFamily:'Inter',fontSize:'.9rem',opacity:inlinePrs.saving?.6:1,boxShadow:'0 4px 14px rgba(13,50,120,.25)'}}>{inlinePrs.saving?'Saving...':'💾 Save Practicals'}</button>
+                        <button onClick={()=>setInlinePrs(null)} style={{background:'var(--g100)',color:'var(--g700)',border:'none',padding:'.75rem 1.25rem',borderRadius:11,fontWeight:600,cursor:'pointer',fontFamily:'Inter'}}>Cancel</button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ── Practical list (read mode) ── */}
+                  {(selSubject.practicals||[]).length===0&&!inlinePrs
+                    ?<div style={{textAlign:'center',padding:'2.5rem 1.5rem',color:'var(--g400)'}}>
+                       <p style={{fontSize:'2rem',marginBottom:'.5rem'}}>🔬</p>
+                       <p style={{fontWeight:700,fontSize:'.875rem',color:'var(--g600)',marginBottom:'.375rem'}}>No practicals yet</p>
+                       {isAdmin&&<button onClick={()=>startInline(selSubject)} style={{marginTop:'.75rem',background:'linear-gradient(135deg,#0d3278,#1a4fa0)',color:'#fff',border:'none',padding:'.625rem 1.5rem',borderRadius:10,fontWeight:700,cursor:'pointer',fontFamily:'Inter',fontSize:'.85rem'}}>➕ Add Practicals</button>}
+                     </div>
+                    :(selSubject.practicals||[]).map((pr,j)=>(
+                      <div key={j} style={{display:'flex',alignItems:'center',gap:'1.25rem',padding:'1rem 1.5rem',borderBottom:j<(selSubject.practicals||[]).length-1?'1px solid #f1f5f9':'none',background:'#fff',transition:'background .15s'}} onMouseEnter={e=>e.currentTarget.style.background='#f8fbff'} onMouseLeave={e=>e.currentTarget.style.background='#fff'}>
+                        <div style={{width:36,height:36,borderRadius:'50%',background:'linear-gradient(135deg,#eff6ff,#dbeafe)',border:'1.5px solid #bfdbfe',display:'flex',alignItems:'center',justifyContent:'center',color:'#1a4fa0',fontWeight:800,fontSize:'.875rem',flexShrink:0,fontFamily:"'Space Grotesk',sans-serif",boxShadow:'0 2px 6px rgba(26,79,160,.1)'}}>{j+1}</div>
+                        <p style={{flex:1,fontWeight:600,fontSize:'clamp(.875rem,2vw,1rem)',color:'#1e293b',lineHeight:1.5,minWidth:0}}>{pr.title||`Practical ${j+1}`}</p>
+                        {pr.pdfUrl
+                          ?<button onClick={()=>setPdfView({title:pr.title||`Practical ${j+1}`,url:pr.pdfUrl})} style={{background:'linear-gradient(135deg,#0d3278,#1a4fa0)',color:'#fff',border:'none',padding:'.55rem 1.375rem',borderRadius:9999,fontWeight:700,cursor:'pointer',fontSize:'clamp(.78rem,1.8vw,.9rem)',fontFamily:'Inter',whiteSpace:'nowrap',display:'flex',alignItems:'center',gap:'.4rem',flexShrink:0,boxShadow:'0 4px 14px rgba(13,50,120,.25)',transition:'all .15s'}} onMouseEnter={e=>{e.currentTarget.style.transform='scale(1.04)';e.currentTarget.style.boxShadow='0 6px 18px rgba(13,50,120,.32)';}} onMouseLeave={e=>{e.currentTarget.style.transform='none';e.currentTarget.style.boxShadow='0 4px 14px rgba(13,50,120,.25)';}}>👁 View PDF</button>
+                          :<span style={{color:'#cbd5e1',fontSize:'.75rem',fontWeight:600,flexShrink:0}}>—</span>
+                        }
+                      </div>
+                    ))
+                  }
+                </div>
+              </div>
+            :/* ── Subject cards grid ── */
+              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(min(280px,100%),1fr))',gap:'1.125rem'}}>
+                {subjects.map((item,i)=>(
+                  <div key={item.id}
+                    onClick={()=>setSelSubject(item)}
+                    style={{background:'#fff',borderRadius:20,padding:'1.375rem',border:'2px solid #eef2ff',boxShadow:'0 2px 12px rgba(13,50,120,.06)',cursor:'pointer',transition:'all .2s cubic-bezier(.4,0,.2,1)',animation:`fadeUp ${.25+i*.06}s ease both`,display:'flex',flexDirection:'column',gap:'.875rem'}}
+                    onMouseEnter={e=>{e.currentTarget.style.border='2px solid #93c5fd';e.currentTarget.style.transform='translateY(-4px)';e.currentTarget.style.boxShadow='0 12px 32px rgba(13,50,120,.14)';}}
+                    onMouseLeave={e=>{e.currentTarget.style.border='2px solid #eef2ff';e.currentTarget.style.transform='none';e.currentTarget.style.boxShadow='0 2px 12px rgba(13,50,120,.06)';}}>
+                    {/* Top: icon + name + code */}
+                    <div style={{display:'flex',alignItems:'flex-start',gap:'.875rem'}}>
+                      <div style={{width:52,height:52,borderRadius:14,background:'linear-gradient(135deg,#dbeafe,#bfdbfe)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.5rem',flexShrink:0}}>📖</div>
+                      <div style={{minWidth:0}}>
+                        <h3 style={{fontWeight:800,fontSize:'1rem',color:'#0f172a',lineHeight:1.3,fontFamily:"'Space Grotesk',sans-serif",marginBottom:'.2rem'}}>{item.subject}</h3>
+                        <p style={{color:'#64748b',fontSize:'.75rem',fontWeight:600}}>Code: {item.code}</p>
+                      </div>
+                    </div>
+                    {/* Middle: label */}
+                    <p style={{color:'#64748b',fontSize:'.82rem'}}>Manual Answer</p>
+                    {/* Bottom: practical count + view btn */}
+                    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginTop:'auto'}}>
+                      <span style={{color:'#334155',fontSize:'.875rem',fontWeight:700}}>{(item.practicals||[]).length} practical{(item.practicals||[]).length!==1?'s':''}</span>
+                      <div style={{background:'#eff6ff',color:'#1a4fa0',fontSize:'.82rem',fontWeight:700,padding:'.4rem 1.125rem',borderRadius:9999,border:'1.5px solid #bfdbfe',transition:'all .15s',whiteSpace:'nowrap'}}
+                        onMouseEnter={e=>{e.currentTarget.style.background='#1a4fa0';e.currentTarget.style.color='#fff';}}
+                        onMouseLeave={e=>{e.currentTarget.style.background='#eff6ff';e.currentTarget.style.color='#1a4fa0';}}>
+                        View →
+                      </div>
+                    </div>
+                    {/* Admin actions */}
+                    {isAdmin&&(
+                      <div style={{display:'flex',gap:'.5rem',paddingTop:'.625rem',borderTop:'1px solid #f1f5f9'}} onClick={e=>e.stopPropagation()}>
+                        <button onClick={()=>openEdit(item)} style={{flex:1,background:'#fef3c7',color:'#92400e',border:'1px solid #fcd34d',padding:'.375rem',borderRadius:8,fontWeight:700,cursor:'pointer',fontSize:'.72rem',fontFamily:'Inter'}}>✏️ Edit</button>
+                        <button onClick={()=>delSubject(item.id)} style={{flex:1,background:'#fee2e2',color:'#dc2626',border:'1px solid #fca5a5',padding:'.375rem',borderRadius:8,fontWeight:700,cursor:'pointer',fontSize:'.72rem',fontFamily:'Inter'}}>🗑 Delete</button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+      }
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════
+   SYLLABUS PAGE
+══════════════════════════════════════════════ */
+function SyllabusPage({isAdmin}){
+  const [selB,setSelB]=useState(null);const [searchQ,setSearchQ]=useState('');const [allData,setAllData]=useState({});const [loadingAll,setLoadingAll]=useState(false);const [selSubject,setSelSubject]=useState(null);const [showAdd,setShowAdd]=useState(false);const [editItem,setEditItem]=useState(null);const [addSem,setAddSem]=useState(1);const [af,setAf]=useState({subjectName:'',subjectCode:'',scheme:'K',pdfUrl:'',dlUrl:''});const [aBusy,setABusy]=useState(false);
+  const b=selB?SYLLABUS_BRANCHES.find(x=>x.code===selB):null;
+  const embed=url=>{if(!url)return'';const m=url.match(/\/d\/([a-zA-Z0-9_-]{10,})/)||url.match(/[?&]id=([a-zA-Z0-9_-]{10,})/);if(m)return`https://drive.google.com/file/d/${m[1]}/preview`;return`https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;};
+  useEffect(()=>{if(!selB){setAllData({});return;}setLoadingAll(true);Promise.all(SEMS.map(s=>fbLoadSyl(selB,s).then(list=>({s,list})))).then(results=>{const d={};results.forEach(({s,list})=>d[s]=list);setAllData(d);setLoadingAll(false);});},[selB]);
+  const reloadSem=async(s)=>{const list=await fbLoadSyl(selB,s);setAllData(p=>({...p,[s]:list}));};
+  const openAdd=(sem)=>{setAf({subjectName:'',subjectCode:'',scheme:'K',pdfUrl:'',dlUrl:''});setAddSem(sem);setEditItem(null);setShowAdd(true);};
+  const openEdit=(item)=>{setAf({subjectName:item.subjectName||'',subjectCode:item.subjectCode||'',scheme:item.scheme||'K',pdfUrl:item.pdfUrl||'',dlUrl:item.dlUrl||''});setEditItem(item);setAddSem(item.sem);setShowAdd(true);};
+  const saveSubject=async()=>{if(!af.subjectName||!af.subjectCode){toast('Name and code required','e');return;}setABusy(true);try{if(editItem){await fbUpdateSyl(editItem.id,selB,editItem.sem,{...af,branch:selB,sem:editItem.sem});await reloadSem(editItem.sem);if(selSubject&&selSubject.id===editItem.id)setSelSubject({...selSubject,...af});toast('Updated!','s');}else{await fbAddSyl({...af,branch:selB,sem:addSem});await reloadSem(addSem);toast('Added!','s');}setShowAdd(false);setEditItem(null);}catch(e){toast(e.message,'e');}setABusy(false);};
+  const delSubject=async(item)=>{if(!window.confirm('Delete?'))return;await fbDelSyl(item.id);await reloadSem(item.sem);if(selSubject&&selSubject.id===item.id)setSelSubject(null);toast('Deleted','i');};
+
+  return(
+    <div className="page-wrap-sm">
+      {showAdd&&(
+        <div className="overlay" onClick={()=>setShowAdd(false)}>
+          <div className="modal" onClick={e=>e.stopPropagation()}>
+            <div className="modal-hd">
+              <div><div style={{color:'#fff',fontWeight:800,fontSize:'1rem',fontFamily:"'Space Grotesk',sans-serif"}}>{editItem?'✏️ Edit Subject':'➕ Add Subject'}</div><div style={{color:'rgba(255,255,255,.6)',fontSize:'.75rem',marginTop:2}}>{b&&b.icon} {b&&b.name} · Semester {addSem}</div></div>
+              <button onClick={()=>setShowAdd(false)} style={{background:'rgba(255,255,255,.15)',border:'none',color:'#fff',width:34,height:34,borderRadius:'50%',cursor:'pointer',fontSize:'1rem'}}>✕</button>
+            </div>
+            <div className="modal-body" style={{display:'flex',flexDirection:'column',gap:'1rem'}}>
+              <div><label className="form-label">Subject Name *</label><input className="form-input" value={af.subjectName} onChange={e=>setAf({...af,subjectName:e.target.value})} placeholder="e.g. Data Structures Using C"/></div>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'1rem'}}>
+                <div><label className="form-label">Subject Code *</label><input className="form-input" value={af.subjectCode} onChange={e=>setAf({...af,subjectCode:e.target.value})} placeholder="e.g. 22317"/></div>
+                <div><label className="form-label">Scheme</label><select className="form-select" value={af.scheme} onChange={e=>setAf({...af,scheme:e.target.value})}>{['K','I','J','G'].map(o=><option key={o}>{o}</option>)}</select></div>
+              </div>
+              <div style={{background:'#f0f7ff',border:'2px solid #bfdbfe',borderRadius:12,padding:'1rem'}}>
+                <label className="form-label" style={{color:'#0d3278'}}>📄 View PDF URL</label>
+                <input className="form-input" value={af.pdfUrl} onChange={e=>setAf({...af,pdfUrl:e.target.value})} placeholder="https://drive.google.com/file/d/xxx/view"/>
+              </div>
+              <div style={{background:'#fff7ed',border:'2px solid #fed7aa',borderRadius:12,padding:'1rem'}}>
+                <label className="form-label" style={{color:'#92400e'}}>⬇ Download PDF URL</label>
+                <input className="form-input" value={af.dlUrl} onChange={e=>setAf({...af,dlUrl:e.target.value})} placeholder="https://drive.google.com/uc?export=download&id=xxx"/>
+              </div>
+            </div>
+            <div className="modal-ft">
+              <button onClick={saveSubject} disabled={aBusy} style={{flex:1,background:'linear-gradient(135deg,#0d3278,#1a4fa0)',color:'#fff',border:'none',padding:'.875rem',borderRadius:11,fontWeight:800,cursor:'pointer',fontFamily:'Inter',fontSize:'1rem',opacity:aBusy?.6:1}}>{aBusy?'Saving...':editItem?'Save Changes':'Add Subject'}</button>
+              <button onClick={()=>setShowAdd(false)} style={{background:'var(--g100)',color:'var(--g700)',border:'none',padding:'.875rem 1.5rem',borderRadius:11,fontWeight:600,cursor:'pointer',fontFamily:'Inter'}}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Full-page PDF viewer */}
+      {selSubject&&(
+        <div style={{position:'fixed',inset:0,zIndex:99999,background:'#0f172a',display:'flex',flexDirection:'column',overflowY:'hidden'}}>
+          <div style={{background:'linear-gradient(100deg,#0d3278,#1a4fa0)',padding:'.75rem 1rem',display:'flex',alignItems:'center',justifyContent:'space-between',gap:'.75rem',flexWrap:'wrap',flexShrink:0,boxShadow:'0 4px 20px rgba(0,0,0,.4)'}}>
+            <div style={{display:'flex',alignItems:'center',gap:'.75rem',minWidth:0,flex:1}}>
+              <button onClick={()=>setSelSubject(null)} style={{background:'rgba(255,255,255,.2)',border:'1.5px solid rgba(255,255,255,.4)',color:'#fff',padding:'.45rem 1rem',borderRadius:9,fontWeight:800,cursor:'pointer',fontFamily:'Inter',fontSize:'.85rem',whiteSpace:'nowrap',flexShrink:0}}>← Back</button>
+              <div style={{minWidth:0}}>
+                <p style={{color:'#fff',fontWeight:800,fontSize:'1rem',lineHeight:1.3,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{selSubject.subjectName}</p>
+                <p style={{color:'rgba(255,255,255,.55)',fontSize:'.72rem',marginTop:1}}>{b&&b.icon} {b&&b.name} · Sem {selSubject.sem} · {selSubject.subjectCode}</p>
+              </div>
+            </div>
+            <div style={{display:'flex',gap:'.375rem',flexShrink:0,flexWrap:'wrap',justifyContent:'flex-end'}}>
+              {isAdmin&&<button onClick={()=>openEdit(selSubject)} style={{background:'#fef3c7',color:'#92400e',border:'none',padding:'.4rem .75rem',borderRadius:8,fontWeight:700,cursor:'pointer',fontSize:'.75rem',fontFamily:'Inter'}}>✏️</button>}
+              {(selSubject.dlUrl||selSubject.pdfUrl)&&<a href={selSubject.dlUrl||selSubject.pdfUrl} target="_blank" rel="noreferrer" style={{background:'linear-gradient(135deg,#f97316,#ea580c)',color:'#fff',padding:'.4rem .75rem',borderRadius:8,fontWeight:700,fontSize:'.75rem',textDecoration:'none',whiteSpace:'nowrap'}}>⬇</a>}
+              <a href={selSubject.pdfUrl} target="_blank" rel="noreferrer" style={{background:'rgba(255,255,255,.18)',border:'1px solid rgba(255,255,255,.3)',color:'#fff',padding:'.4rem .75rem',borderRadius:8,fontWeight:700,fontSize:'.75rem',textDecoration:'none',whiteSpace:'nowrap'}}>↗ Open</a>
+            </div>
+          </div>
+          {selSubject.pdfUrl
+            ?<iframe key={selSubject.id+'_v'} src={embed(selSubject.pdfUrl)} style={{flex:1,width:'100%',border:'none',display:'block',background:'#1e293b'}} title={selSubject.subjectName} allowFullScreen loading="lazy"/>
+            :<div style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',color:'#fff',gap:'.875rem'}}>
+              <p style={{fontSize:'3rem'}}>📄</p>
+              <p style={{fontWeight:700,fontSize:'1.125rem'}}>No PDF uploaded yet</p>
+              <p style={{opacity:.5,fontSize:'.875rem'}}>{isAdmin?'Use ✏️ Edit to add a PDF URL.':'Check back later.'}</p>
+              <button onClick={()=>setSelSubject(null)} style={{marginTop:'.5rem',background:'rgba(255,255,255,.15)',border:'1px solid rgba(255,255,255,.3)',color:'#fff',padding:'.625rem 1.5rem',borderRadius:10,fontWeight:700,cursor:'pointer',fontFamily:'Inter'}}>← Go Back</button>
+            </div>
+          }
+        </div>
+      )}
+
+      <div className="page-hd"><p className="page-hd-tag">MSBTE K SCHEME</p><h1 className="page-hd-title">📋 Syllabus</h1><p className="page-hd-sub">Select your branch to view subject-wise syllabus for all semesters</p></div>
+
+      {/* Branch Search */}
+      <div style={{background:'#fff',borderRadius:18,border:'1px solid var(--g100)',boxShadow:'var(--sh-sm)',padding:'clamp(.875rem,3vw,1.5rem)',marginBottom:'1.5rem'}}>
+        <p style={{fontWeight:700,fontSize:'.75rem',color:'var(--g500)',textTransform:'uppercase',letterSpacing:'1px',marginBottom:'.75rem'}}>Select Branch</p>
+        <div className="search-wrap">
+          <span className="search-icon">🔍</span>
+          <input className="search-input" value={searchQ} onChange={e=>setSearchQ(e.target.value)} placeholder="Search branch e.g. CO, Civil, Computer..."/>
+          {searchQ&&<button className="search-clear" onClick={()=>setSearchQ('')}>✕</button>}
+          {searchQ&&(()=>{
+            const filtered=SYLLABUS_BRANCHES.filter(br=>br.name.toLowerCase().includes(searchQ.toLowerCase())||br.code.toLowerCase().includes(searchQ.toLowerCase()));
+            return(
+              <div className="search-dropdown">
+                {filtered.length===0?<div style={{padding:'.875rem 1rem',color:'var(--g400)',fontSize:'.875rem',textAlign:'center'}}>No branch found</div>
+                :filtered.map(br=>(
+                  <div key={br.code} className="search-item" onClick={()=>{setSelB(br.code);setSearchQ('');setSelSubject(null);}}>
+                    <span style={{fontSize:'1.25rem',flexShrink:0}}>{br.icon}</span>
+                    <span style={{fontWeight:800,color:'#1a4fa0',fontSize:'.88rem',fontFamily:"'Space Grotesk',sans-serif",marginRight:'.375rem'}}>{br.code}</span>
+                    <span style={{color:'var(--g600)',fontSize:'.85rem'}}>{br.name}</span>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
+        </div>
+        {selB&&!searchQ&&(
+          <div style={{marginTop:'.75rem',display:'flex',alignItems:'center',gap:'.5rem',flexWrap:'wrap'}}>
+            <span style={{fontSize:'.78rem',color:'var(--g500)',fontWeight:600}}>Selected:</span>
+            <span style={{display:'inline-flex',alignItems:'center',gap:'.375rem',background:'linear-gradient(135deg,#0d3278,#1a4fa0)',color:'#fff',padding:'.3rem .875rem .3rem .625rem',borderRadius:9999,fontWeight:700,fontSize:'.82rem'}}>
+              {b&&b.icon} {b&&b.name}
+              <button onClick={()=>{setSelB(null);setAllData({});setSelSubject(null);}} style={{background:'rgba(255,255,255,.25)',border:'none',color:'#fff',borderRadius:'50%',width:18,height:18,cursor:'pointer',fontSize:'.65rem',marginLeft:'.25rem'}}>✕</button>
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Semester tables */}
+      {!selSubject&&selB&&!loadingAll&&(
+        <div style={{display:'flex',flexDirection:'column',gap:'1.25rem'}}>
+          {SEMS.map(s=>{
+            const list=allData[s]||[];
+            return(
+              <div key={s} style={{background:'#fff',borderRadius:18,border:'1px solid var(--g100)',boxShadow:'var(--sh-sm)',overflow:'hidden'}}>
+                <div className="sec-hd">
+                  <div style={{display:'flex',alignItems:'center',gap:'.75rem'}}>
+                    <div className="sec-num">{s}</div>
+                    <div>
+                      <p style={{color:'#fff',fontWeight:800,fontSize:'.9375rem',fontFamily:"'Space Grotesk',sans-serif",lineHeight:1}}>Semester {s}</p>
+                      <p style={{color:'rgba(255,255,255,.6)',fontSize:'.72rem',marginTop:2}}>{list.length} subject{list.length!==1?'s':''}</p>
+                    </div>
+                  </div>
+                  {isAdmin&&<button onClick={()=>openAdd(s)} style={{background:'rgba(255,255,255,.18)',border:'1px solid rgba(255,255,255,.35)',color:'#fff',padding:'.35rem .875rem',borderRadius:8,fontWeight:700,cursor:'pointer',fontFamily:'Inter',fontSize:'.78rem',whiteSpace:'nowrap'}}>+ Add</button>}
+                </div>
+                {list.length===0
+                  ?<div style={{padding:'1.25rem 1.5rem',textAlign:'center',color:'var(--g400)',fontSize:'.85rem',background:'#fafafa'}}>
+                    {isAdmin?<span>No subjects yet — <span onClick={()=>openAdd(s)} style={{color:'#1a4fa0',fontWeight:700,cursor:'pointer'}}>+ Add one</span></span>:'No subjects uploaded yet.'}
+                  </div>
+                  :<div className="tbl-wrap" style={{marginTop:0}}>
+                    <table className="tbl">
+                      <thead>
+                        <tr>
+                          <th style={{width:40}}>Sr.</th>
+                          <th>Course Title</th>
+                          <th style={{width:110}}>Course Code</th>
+                          <th style={{width:100,textAlign:'center'}}>Syllabus</th>
+                          {isAdmin&&<th style={{width:100,textAlign:'center'}}>Actions</th>}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {list.map((item,i)=>(
+                          <tr key={item.id}>
+                            <td style={{color:'var(--g400)',fontWeight:700}}>{i+1}</td>
+                            <td><span onClick={()=>setSelSubject({...item,sem:s})} style={{fontWeight:700,color:'#1a4fa0',fontSize:'.9rem',cursor:'pointer',fontFamily:"'Space Grotesk',sans-serif",textDecoration:'underline',textDecorationColor:'#bfdbfe',textUnderlineOffset:3}} onMouseEnter={e=>e.currentTarget.style.color='#0d3278'} onMouseLeave={e=>e.currentTarget.style.color='#1a4fa0'}>{item.subjectName}</span></td>
+                            <td><span style={{background:'#f0f7ff',color:'#1a4fa0',fontSize:'.78rem',fontWeight:800,padding:'3px 9px',borderRadius:7,fontFamily:"'Space Grotesk',sans-serif"}}>{item.subjectCode}</span></td>
+                            <td style={{textAlign:'center'}}>{item.pdfUrl?<button onClick={()=>setSelSubject({...item,sem:s})} style={{background:'linear-gradient(135deg,#0d3278,#1a4fa0)',color:'#fff',border:'none',padding:'.35rem .875rem',borderRadius:8,fontWeight:700,cursor:'pointer',fontFamily:'Inter',fontSize:'.75rem',whiteSpace:'nowrap'}}>📋 View</button>:<span style={{color:'var(--g300)',fontSize:'.75rem',fontWeight:600}}>—</span>}</td>
+                            {isAdmin&&<td style={{textAlign:'center'}}><div style={{display:'flex',gap:'.375rem',justifyContent:'center'}}><button onClick={()=>openEdit({...item,sem:s})} style={{background:'#fef3c7',color:'#92400e',border:'none',padding:'.3rem .625rem',borderRadius:6,fontWeight:700,cursor:'pointer',fontSize:'.72rem',fontFamily:'Inter'}}>✏️</button><button onClick={()=>delSubject({...item,sem:s})} style={{background:'#fee2e2',color:'#dc2626',border:'none',padding:'.3rem .625rem',borderRadius:6,fontWeight:700,cursor:'pointer',fontSize:'.72rem',fontFamily:'Inter'}}>🗑</button></div></td>}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                }
+              </div>
+            );
+          })}
+        </div>
+      )}
+      {!selSubject&&selB&&loadingAll&&<div style={{textAlign:'center',padding:'4rem'}}><div className="spinner"/><p style={{color:'var(--g400)',marginTop:'1rem',fontWeight:600}}>Loading all semesters...</p></div>}
+      {!selSubject&&!selB&&<div className="empty"><div className="empty-icon">🔍</div><p style={{fontWeight:700,color:'var(--g600)'}}>Search and select a branch above</p><p style={{color:'var(--g400)',fontSize:'.875rem',marginTop:'.375rem'}}>Subject-wise syllabus for all 6 semesters will appear here</p></div>}
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════
+   MANUAL PDF PAGE
+══════════════════════════════════════════════ */
+function ManualPdfPage({isAdmin}){
+  const [selB,setSelB]=useState(null);const [selS,setSelS]=useState(null);const [subjects,setSubjects]=useState([]);const [loading,setLoading]=useState(false);const [searchQ,setSearchQ]=useState('');const [showAdd,setShowAdd]=useState(false);const [editItem,setEditItem]=useState(null);const [af,setAf]=useState({subjectName:'',subjectCode:'',scheme:'K',pdfFiles:[]});const [aBusy,setABusy]=useState(false);const [pdfView,setPdfView]=useState(null);
+  const b=selB?MBRANCHES.find(x=>x.code===selB):null;
+  useEffect(()=>{if(!selB||!selS)return;setLoading(true);fbLoadMPdf(selB,selS).then(list=>{setSubjects(list);setLoading(false);});},[selB,selS]);
+  const openAdd=()=>{setAf({subjectName:'',subjectCode:'',scheme:'K',pdfFiles:[]});setEditItem(null);setShowAdd(true);};
+  const openEdit=(item)=>{setAf({subjectName:item.subjectName||'',subjectCode:item.subjectCode||'',scheme:item.scheme||'K',pdfFiles:item.pdfFiles||[]});setEditItem(item);setShowAdd(true);};
+  const addPdfFile=()=>setAf({...af,pdfFiles:[...af.pdfFiles,{url:''}]});
+  const updatePdfFile=(i,v)=>{const p=[...af.pdfFiles];p[i]={url:v};setAf({...af,pdfFiles:p});};
+  const removePdfFile=(i)=>{const p=[...af.pdfFiles];p.splice(i,1);setAf({...af,pdfFiles:p});};
+  const saveSubject=async()=>{if(!af.subjectName||!af.subjectCode){toast('Name and code required','e');return;}setABusy(true);try{if(editItem){await fbUpdateMPdf(editItem.id,{...af,branch:selB,sem:selS});setSubjects(p=>p.map(x=>x.id===editItem.id?{...x,...af}:x));toast('Updated!','s');}else{const item=await fbAddMPdf({...af,branch:selB,sem:selS});setSubjects(p=>[...p,item]);toast('Added!','s');}setShowAdd(false);setEditItem(null);}catch(e){toast(e.message,'e');}setABusy(false);};
+  const delSubject=async(id)=>{if(!window.confirm('Delete?'))return;await fbDelMPdf(id);setSubjects(p=>p.filter(x=>x.id!==id));toast('Deleted','i');};
+  const schemeColor=(sc)=>({'K':['#0d3278','#1a4fa0','#dbeafe','#93c5fd','#eff6ff'],'I':['#065f46','#059669','#d1fae5','#6ee7b7','#ecfdf5'],'J':['#92400e','#d97706','#fef3c7','#fcd34d','#fffbeb'],'G':['#581c87','#7c3aed','#ede9fe','#c4b5fd','#f5f3ff']}[sc]||['#0d3278','#1a4fa0','#dbeafe','#93c5fd','#eff6ff']);
+  const getDlLink=url=>{if(!url)return'';const m=url.match(/\/d\/([a-zA-Z0-9_-]{10,})/)||url.match(/[?&]id=([a-zA-Z0-9_-]{10,})/);if(m)return`https://drive.google.com/uc?export=download&id=${m[1]}`;return url;};
+
+  if(!selB)return(
+    <div className="page-wrap-sm">
+      <div className="page-hd"><p className="page-hd-tag">K SCHEME - DOWNLOADABLE SUBJECT MANUALS</p><h1 className="page-hd-title">📥 Manual PDFs</h1><p className="page-hd-sub">Download subject manual PDFs — branch and semester wise</p></div>
+      <div style={{background:'#fff',borderRadius:18,border:'1px solid var(--g100)',boxShadow:'var(--sh-sm)',padding:'clamp(.875rem,3vw,1.5rem)',marginBottom:'1.5rem'}}>
+        <p style={{fontWeight:700,fontSize:'.75rem',color:'var(--g500)',textTransform:'uppercase',letterSpacing:'1px',marginBottom:'.75rem'}}>Select Branch</p>
+        <div className="search-wrap">
+          <span className="search-icon">🔍</span>
+          <input className="search-input" value={searchQ} onChange={e=>setSearchQ(e.target.value)} placeholder="Search branch e.g. CO, Civil, Computer..."/>
+          {searchQ&&<button className="search-clear" onClick={()=>setSearchQ('')}>✕</button>}
+          {searchQ&&(()=>{
+            const filtered=MBRANCHES.filter(br=>br.name.toLowerCase().includes(searchQ.toLowerCase())||br.code.toLowerCase().includes(searchQ.toLowerCase()));
+            return(
+              <div className="search-dropdown">
+                {filtered.length===0?<div style={{padding:'.875rem 1rem',color:'var(--g400)',fontSize:'.875rem',textAlign:'center'}}>No branch found</div>
+                :filtered.map(br=>(
+                  <div key={br.code} className="search-item" onClick={()=>{setSelB(br.code);setSearchQ('');}}>
+                    <span style={{fontSize:'1.25rem'}}>{br.icon}</span>
+                    <span style={{fontWeight:800,color:'#1a4fa0',fontSize:'.88rem',fontFamily:"'Space Grotesk',sans-serif",marginRight:'.375rem'}}>{br.code}</span>
+                    <span style={{color:'var(--g600)',fontSize:'.85rem'}}>{br.name}</span>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
+        </div>
+        {!searchQ&&<div style={{marginTop:'1rem',display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(min(140px,45%),1fr))',gap:'.75rem'}}>
+          {MBRANCHES.map((br,i)=>(
+            <div key={br.code} onClick={()=>setSelB(br.code)}
+              style={{background:'linear-gradient(135deg,#f8fafc,#eff6ff)',borderRadius:14,padding:'1.125rem .875rem',cursor:'pointer',textAlign:'center',border:'2px solid var(--g100)',transition:'all .2s',animation:`fadeUp ${.3+i*.07}s ease`}}
+              onMouseEnter={e=>{e.currentTarget.style.background='linear-gradient(135deg,#dbeafe,#bfdbfe)';e.currentTarget.style.borderColor='#1a4fa0';e.currentTarget.style.transform='translateY(-4px)';}}
+              onMouseLeave={e=>{e.currentTarget.style.background='linear-gradient(135deg,#f8fafc,#eff6ff)';e.currentTarget.style.borderColor='var(--g100)';e.currentTarget.style.transform='none';}}>
+              <div style={{width:48,height:48,borderRadius:14,background:'#dbeafe',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.5rem',margin:'0 auto .625rem'}}>{br.icon}</div>
+              <div style={{fontWeight:800,color:'#0d3278',fontSize:'.875rem',fontFamily:"'Space Grotesk',sans-serif"}}>{br.code}</div>
+              <div style={{fontSize:'.68rem',color:'var(--g500)',marginTop:3}}>{br.name}</div>
+              <div style={{marginTop:'.5rem',background:'#dbeafe',color:'#0d3278',fontSize:'.62rem',fontWeight:700,padding:'3px 9px',borderRadius:9999,display:'inline-block'}}>6 Sems</div>
+            </div>
+          ))}
+        </div>}
+      </div>
+    </div>
+  );
+
+  if(!selS)return(
+    <div className="page-wrap-sm">
+      <div className="page-hd"><p className="page-hd-tag">K SCHEME - DOWNLOADABLE SUBJECT MANUALS</p><h1 className="page-hd-title">📥 Manual PDFs</h1></div>
+      <div style={{display:'flex',alignItems:'center',gap:'1rem',marginBottom:'1.5rem',flexWrap:'wrap'}}>
+        <button className="back-btn" onClick={()=>setSelB(null)}>← Back</button>
+        <h2 style={{fontSize:'1.5rem',fontWeight:800,fontFamily:"'Space Grotesk',sans-serif"}}>{b.icon} {b.name}</h2>
+      </div>
+      <div style={{display:'flex',flexWrap:'wrap',gap:'.625rem'}}>
+        {SEMS.map(s=>(
+          <button key={s} onClick={()=>setSelS(s)} style={{background:'#fff',border:'2px solid var(--g200)',borderRadius:14,padding:'1rem',cursor:'pointer',fontFamily:'Inter',flex:'1 1 calc(33% - .5rem)',minWidth:80,maxWidth:160,textAlign:'center',transition:'all .2s',boxShadow:'var(--sh-sm)'}} onMouseEnter={e=>{e.currentTarget.style.borderColor='#1a4fa0';e.currentTarget.style.transform='translateY(-3px)';}} onMouseLeave={e=>{e.currentTarget.style.borderColor='var(--g200)';e.currentTarget.style.transform='none';}}>
+            <div style={{fontSize:'2rem',fontWeight:900,color:'#1a4fa0',fontFamily:"'Space Grotesk',sans-serif"}}>{s}</div>
+            <div style={{fontSize:'.8rem',color:'var(--g500)',marginTop:4}}>Semester {s}</div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  return(
+    <div className="page-wrap-sm">
+      {pdfView&&(
+        <div className="overlay" onClick={()=>setPdfView(null)}>
+          <div style={{background:'#fff',borderRadius:20,width:'100%',maxWidth:900,maxHeight:'92vh',display:'flex',flexDirection:'column',overflow:'hidden',boxShadow:'var(--sh-xl)'}} onClick={e=>e.stopPropagation()}>
+            <div style={{background:'linear-gradient(100deg,#0d3278,#1a4fa0)',padding:'1rem 1.5rem',display:'flex',justifyContent:'space-between',alignItems:'center',flexShrink:0}}>
+              <div style={{color:'#fff',fontWeight:700}}>{pdfView.title}</div>
+              <button onClick={()=>setPdfView(null)} style={{background:'rgba(255,255,255,.15)',border:'none',color:'#fff',width:34,height:34,borderRadius:'50%',cursor:'pointer',fontSize:'1rem'}}>✕</button>
+            </div>
+            <div style={{flex:1,minHeight:500,background:'#374151'}}><iframe src={embedUrl(pdfView.url)} style={{width:'100%',height:'100%',minHeight:500,border:'none'}} title={pdfView.title} allowFullScreen/></div>
+          </div>
+        </div>
+      )}
+      {showAdd&&(
+        <div className="overlay" onClick={()=>setShowAdd(false)}>
+          <div className="modal" onClick={e=>e.stopPropagation()}>
+            <div className="modal-hd">
+              <div><div style={{color:'#fff',fontWeight:800,fontSize:'1rem',fontFamily:"'Space Grotesk',sans-serif"}}>{editItem?'Edit Subject PDF':'Add Subject PDF'}</div></div>
+              <button onClick={()=>setShowAdd(false)} style={{background:'rgba(255,255,255,.15)',border:'none',color:'#fff',width:34,height:34,borderRadius:'50%',cursor:'pointer',fontSize:'1rem'}}>✕</button>
+            </div>
+            <div className="modal-body">
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'1rem',marginBottom:'1rem'}}>
+                <div style={{gridColumn:'1/3'}}><label className="form-label">Subject Name *</label><input className="form-input" value={af.subjectName||''} onChange={e=>setAf({...af,subjectName:e.target.value})} placeholder="e.g. Data Structures Using C"/></div>
+                <div><label className="form-label">Subject Code *</label><input className="form-input" value={af.subjectCode||''} onChange={e=>setAf({...af,subjectCode:e.target.value})} placeholder="e.g. 22317"/></div>
+                <div><label className="form-label">Scheme</label><select className="form-select" value={af.scheme||'K'} onChange={e=>setAf({...af,scheme:e.target.value})}>{['K','I','J','G'].map(o=><option key={o}>{o}</option>)}</select></div>
+              </div>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'.75rem'}}>
+                <label style={{fontWeight:700,fontSize:'.9rem',color:'var(--g700)'}}>PDF Files</label>
+                <button onClick={addPdfFile} style={{background:'linear-gradient(135deg,#dbeafe,#bfdbfe)',color:'#0d3278',border:'none',padding:'.4rem .875rem',borderRadius:8,fontWeight:700,cursor:'pointer',fontFamily:'Inter',fontSize:'.8rem'}}>+ Add PDF</button>
+              </div>
+              {(af.pdfFiles||[]).length===0&&<div style={{background:'var(--g50)',border:'2px dashed var(--g200)',borderRadius:12,padding:'1.5rem',textAlign:'center',color:'var(--g400)'}}><div style={{fontSize:'2rem',marginBottom:'.5rem'}}>📄</div><p style={{fontSize:'.875rem',fontWeight:600}}>No PDFs added yet</p></div>}
+              {(af.pdfFiles||[]).map((f,i)=>(
+                <div key={i} style={{background:'var(--g50)',border:'2px solid var(--g200)',borderRadius:12,padding:'1rem',marginBottom:'.75rem'}}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'.625rem'}}><span style={{fontWeight:700,fontSize:'.85rem',color:'#0d3278'}}>PDF {i+1}</span><button onClick={()=>removePdfFile(i)} style={{background:'#fee2e2',color:'#dc2626',border:'none',padding:'2px 8px',borderRadius:6,cursor:'pointer',fontSize:'.75rem',fontWeight:700}}>Remove</button></div>
+                  <input className="form-input" value={f.url||''} onChange={e=>updatePdfFile(i,e.target.value)} placeholder="Google Drive URL"/>
+                </div>
+              ))}
+            </div>
+            <div className="modal-ft">
+              <button onClick={saveSubject} disabled={aBusy} style={{flex:1,background:'linear-gradient(135deg,#0d3278,#1a4fa0)',color:'#fff',border:'none',padding:'.875rem',borderRadius:11,fontWeight:800,cursor:'pointer',fontFamily:'Inter',fontSize:'1rem',opacity:aBusy?.6:1}}>{aBusy?'Saving...':editItem?'Save Changes':'Add Subject'}</button>
+              <button onClick={()=>setShowAdd(false)} style={{background:'var(--g100)',color:'var(--g700)',border:'none',padding:'.875rem 1.5rem',borderRadius:11,fontWeight:600,cursor:'pointer',fontFamily:'Inter'}}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'1.5rem',flexWrap:'wrap',gap:'1rem'}}>
+        <div style={{display:'flex',alignItems:'center',gap:'1rem'}}>
+          <button className="back-btn" onClick={()=>setSelS(null)}>← Back</button>
+          <div><h2 style={{fontSize:'1.25rem',fontWeight:800,fontFamily:"'Space Grotesk',sans-serif"}}>{b.icon} {b.name} — Semester {selS}</h2><p style={{color:'var(--g500)',fontSize:'.875rem',marginTop:2}}>{subjects.length} subject{subjects.length!==1?'s':''}</p></div>
+        </div>
+        {isAdmin&&<button onClick={openAdd} style={{background:'linear-gradient(135deg,#f97316,#ea580c)',color:'#fff',border:'none',padding:'.75rem 1.5rem',borderRadius:11,fontWeight:700,cursor:'pointer',fontFamily:'Inter',fontSize:'.9rem'}}>+ Add Subject PDF</button>}
+      </div>
+      {loading?<div style={{textAlign:'center',padding:'4rem'}}><div className="spinner"/><p style={{color:'var(--g400)',marginTop:'1rem'}}>Loading...</p></div>
+      :subjects.length===0?<div className="empty"><div className="empty-icon">📥</div><p style={{fontWeight:700,color:'var(--g600)'}}>No manual PDFs yet</p><p style={{color:'var(--g400)',fontSize:'.875rem',marginTop:'.5rem'}}>{isAdmin?'Click "+ Add Subject PDF" above.':'Check back later.'}</p></div>
+      :<div style={{display:'flex',flexDirection:'column',gap:'1rem'}}>
+        {subjects.map((item,idx)=>{
+          const pdfCount=(item.pdfFiles||[]).length;
+          const sc=schemeColor(item.scheme||'K');
+          return(
+            <div key={item.id} style={{background:'#fff',borderRadius:20,border:`1.5px solid ${sc[2]}`,boxShadow:`0 2px 12px ${sc[1]}14`,overflow:'hidden',transition:'all .3s',animation:'fadeUp .3s ease both',animationDelay:`${idx*40}ms`}} onMouseEnter={e=>e.currentTarget.style.boxShadow=`0 8px 32px ${sc[1]}28`} onMouseLeave={e=>e.currentTarget.style.boxShadow=`0 2px 12px ${sc[1]}14`}>
+              <div style={{height:4,background:`linear-gradient(90deg,${sc[0]},${sc[1]},#f97316)`}}/>
+              <div style={{display:'flex',alignItems:'stretch',gap:0,flexWrap:'wrap'}}>
+                <div style={{width:72,background:`linear-gradient(160deg,${sc[0]},${sc[1]})`,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'.75rem .4rem',flexShrink:0}}>
+                  <div style={{fontSize:'.38rem',fontWeight:800,color:'rgba(255,255,255,.65)',textTransform:'uppercase',letterSpacing:'1px',lineHeight:1,textAlign:'center'}}>{item.scheme||'K'} SCH</div>
+                  <div style={{fontSize:'.82rem',fontWeight:900,color:'#fff',lineHeight:1.1,marginTop:4,textAlign:'center'}}>{item.subjectCode}</div>
+                  <div style={{width:28,height:1.5,background:'rgba(255,255,255,.25)',borderRadius:2,margin:'4px auto'}}/>
+                  <div style={{fontSize:'.35rem',fontWeight:700,color:'rgba(255,255,255,.55)',textTransform:'uppercase',letterSpacing:'.8px',textAlign:'center'}}>MANUAL</div>
+                </div>
+                <div style={{flex:1,minWidth:150,padding:'.875rem 1rem',display:'flex',flexDirection:'column',justifyContent:'center',borderRight:`1px solid ${sc[2]}`}}>
+                  <h3 style={{fontWeight:800,fontSize:'1rem',color:'var(--g900)',lineHeight:1.25,fontFamily:"'Space Grotesk',sans-serif",marginBottom:'.4rem'}}>{item.subjectName}</h3>
+                  <div style={{display:'flex',gap:'.375rem',flexWrap:'wrap',alignItems:'center'}}>
+                    <span style={{background:sc[2],color:sc[0],fontSize:'.65rem',fontWeight:800,padding:'2px 9px',borderRadius:9999,border:`1px solid ${sc[3]}`}}>{item.scheme||'K'} Scheme</span>
+                    <span style={{background:pdfCount>0?'#dcfce7':'#fef9c3',color:pdfCount>0?'#166534':'#854d0e',fontSize:'.65rem',fontWeight:700,padding:'2px 9px',borderRadius:9999}}>{pdfCount>0?`✅ ${pdfCount} PDF${pdfCount>1?'s':''}`:'⏳ Pending'}</span>
+                  </div>
+                </div>
+                <div style={{display:'flex',flexDirection:'column',justifyContent:'center',padding:'.75rem 1rem',gap:'.5rem',minWidth:220,flex:'0 0 auto'}}>
+                  {pdfCount>0?(item.pdfFiles||[]).map((f,i)=>(
+                    <div key={i} style={{display:'flex',alignItems:'center',gap:'.5rem',background:sc[4],borderRadius:12,padding:'.5rem .75rem',border:`1px solid ${sc[3]}`,transition:'all .2s'}} onMouseEnter={e=>e.currentTarget.style.background=sc[2]} onMouseLeave={e=>e.currentTarget.style.background=sc[4]}>
+                      <div style={{width:30,height:30,borderRadius:8,background:`linear-gradient(135deg,${sc[0]},${sc[1]})`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'.85rem',flexShrink:0}}>📄</div>
+                      <span style={{flex:1,fontSize:'.78rem',fontWeight:700,color:sc[0]}}>Manual PDF {i+1}</span>
+                      <button onClick={()=>setPdfView({title:item.subjectName,url:f.url})} style={{background:`linear-gradient(135deg,${sc[0]},${sc[1]})`,color:'#fff',border:'none',padding:'.35rem .75rem',borderRadius:8,fontWeight:700,cursor:'pointer',fontFamily:'Inter',fontSize:'.72rem',whiteSpace:'nowrap'}}>👁 View</button>
+                      <a href={getDlLink(f.url)} target="_blank" rel="noreferrer" style={{background:'linear-gradient(135deg,#f97316,#ea580c)',color:'#fff',padding:'.35rem .75rem',borderRadius:8,fontWeight:700,fontSize:'.72rem',textDecoration:'none',whiteSpace:'nowrap'}}>⬇</a>
+                    </div>
+                  )):<div style={{display:'flex',alignItems:'center',gap:'.625rem',background:'#f8fafc',borderRadius:12,padding:'.625rem .875rem',border:'1px dashed var(--g200)'}}><span style={{fontSize:'1.1rem'}}>📭</span><span style={{fontSize:'.78rem',color:'var(--g400)',fontWeight:600}}>{isAdmin?'No PDFs yet — click Edit':'PDF coming soon'}</span></div>}
+                </div>
+                {isAdmin&&<div style={{display:'flex',flexDirection:'column',justifyContent:'center',gap:'.375rem',padding:'.75rem .875rem',borderLeft:`1px solid ${sc[2]}`,background:`${sc[4]}66`,flexShrink:0}}>
+                  <button onClick={()=>openEdit(item)} style={{background:'#fef3c7',color:'#92400e',border:'1px solid #fcd34d',padding:'.375rem .75rem',borderRadius:8,fontWeight:700,cursor:'pointer',fontSize:'.72rem',fontFamily:'Inter',whiteSpace:'nowrap'}}>✏️ Edit</button>
+                  <button onClick={()=>delSubject(item.id)} style={{background:'#fee2e2',color:'#dc2626',border:'1px solid #fca5a5',padding:'.375rem .75rem',borderRadius:8,fontWeight:700,cursor:'pointer',fontSize:'.72rem',fontFamily:'Inter',whiteSpace:'nowrap'}}>🗑 Delete</button>
+                </div>}
+              </div>
+            </div>
+          );
+        })}
+      </div>}
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════
+   CONTACT PAGE
+══════════════════════════════════════════════ */
+function ContactPage(){
+  const [form,setForm]=useState({name:'',email:'',subject:'',message:''});const [busy,setBusy]=useState(false);const [sent,setSent]=useState(false);
+  const submit=async()=>{if(!form.name||!form.email||!form.message){toast('Please fill all required fields','e');return;}setBusy(true);try{await db.collection('contactMessages').add({...form,ts:Date.now(),status:'new'});setSent(true);toast('Message sent!','s');}catch(e){toast(e.message,'e');}setBusy(false);};
+  return(
+    <div style={{minHeight:'60vh',display:'flex',alignItems:'center',justifyContent:'center',padding:'2rem var(--pad)'}}>
+      {sent?
+        <div style={{textAlign:'center',background:'#fff',borderRadius:20,padding:'3rem 2rem',boxShadow:'var(--sh-md)',maxWidth:400,width:'100%'}}>
+          <div style={{fontSize:'3rem',marginBottom:'1rem'}}>✅</div>
+          <h2 style={{fontWeight:800,fontSize:'1.5rem',fontFamily:"'Space Grotesk',sans-serif",marginBottom:'.5rem'}}>Message Sent!</h2>
+          <p style={{color:'var(--g500)',fontSize:'.9rem',lineHeight:1.6}}>Thank you for contacting us. We'll get back to you soon.</p>
+          <button onClick={()=>setSent(false)} style={{marginTop:'1.5rem',background:'linear-gradient(135deg,#0d3278,#1a4fa0)',color:'#fff',border:'none',padding:'.75rem 1.5rem',borderRadius:10,fontWeight:700,cursor:'pointer',fontFamily:'Inter'}}>Send Another</button>
+        </div>
+      :
+        <div style={{background:'#fff',borderRadius:20,padding:'clamp(1.25rem,4vw,2rem)',boxShadow:'var(--sh-md)',width:'100%',maxWidth:560}}>
+          <h2 style={{fontWeight:800,fontSize:'1.5rem',fontFamily:"'Space Grotesk',sans-serif",marginBottom:'.25rem'}}>📧 Contact Us</h2>
+          <p style={{color:'var(--g500)',fontSize:'.875rem',marginBottom:'1.5rem'}}>Have questions? We'd love to hear from you.</p>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'1rem',marginBottom:'1rem'}}>
+            <div><label className="form-label">Name *</label><input className="form-input" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder="Your name"/></div>
+            <div><label className="form-label">Email *</label><input className="form-input" type="email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} placeholder="your@email.com"/></div>
+          </div>
+          <div style={{marginBottom:'1rem'}}><label className="form-label">Subject</label><input className="form-input" value={form.subject} onChange={e=>setForm({...form,subject:e.target.value})} placeholder="What is this about?"/></div>
+          <div style={{marginBottom:'1.5rem'}}><label className="form-label">Message *</label><textarea className="form-input" value={form.message} onChange={e=>setForm({...form,message:e.target.value})} placeholder="Your message..." rows={5} style={{resize:'vertical'}}/></div>
+          <button onClick={submit} disabled={busy} style={{width:'100%',background:'linear-gradient(135deg,#0d3278,#1a4fa0)',color:'#fff',border:'none',padding:'.875rem',borderRadius:11,fontWeight:800,cursor:'pointer',fontSize:'1rem',fontFamily:'Inter',opacity:busy?.6:1}}>{busy?'Sending...':'Send Message'}</button>
+        </div>
+      }
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════
+   PRIVACY POLICY PAGE
+══════════════════════════════════════════════ */
+function PrivacyPage({nav}){
+  return(
+    <div className="page-wrap-sm">
+      <button className="back-btn" onClick={()=>nav('home')} style={{marginBottom:'1.25rem'}}>← Back to Home</button>
+      <div className="card" style={{padding:'clamp(1.25rem,4vw,2rem)'}}>
+        <h1 style={{fontSize:'clamp(1.375rem,3vw,1.875rem)',fontWeight:900,fontFamily:"'Space Grotesk',sans-serif",color:'var(--g900)',marginBottom:'.5rem'}}>👥 Privacy Policy</h1>
+        <p style={{color:'var(--g400)',fontSize:'.8rem',marginBottom:'2rem'}}>Last updated: March 2025</p>
+        {[
+          ['Information We Collect','We do not collect any personal information from students. This portal is completely free and does not require any login or registration for accessing study materials.'],
+          ['How We Use Information','Contact form messages submitted by users are stored securely in our database solely for the purpose of responding to queries. We do not share, sell, or distribute any user information to third parties.'],
+          ['Cookies','This website does not use tracking cookies. Firebase services may use essential session cookies for authentication purposes only.'],
+          ['Third-Party Services','We use Google Drive for hosting PDF files and Google Firebase for database services. These services have their own privacy policies. PDF files are publicly accessible and do not require any user authentication.'],
+          ['Student Data','No student data, academic records, or personal information is collected or stored. All study materials provided on this portal are for educational purposes only.'],
+          ['Contact','If you have any questions about this Privacy Policy, please contact us through the Contact page.'],
+        ].map(([title,text])=>(
+          <div key={title} style={{marginBottom:'1.5rem'}}>
+            <h3 style={{fontWeight:700,fontSize:'1rem',color:'var(--g900)',fontFamily:"'Space Grotesk',sans-serif",marginBottom:'.5rem'}}>{title}</h3>
+            <p style={{color:'var(--g600)',fontSize:'.9rem',lineHeight:1.7}}>{text}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════
+   ABOUT US PAGE
+══════════════════════════════════════════════ */
+function AboutPage({nav}){
+  const [activeWhy,setActiveWhy]=useState(0);
+  const whyItems=[
+    {title:'Learn Anywhere, Anytime',desc:'Access all study materials from any device — mobile, tablet, or laptop. Study at your own pace, anytime you want, without any restrictions.',icon:'📱'},
+    {title:'100% Free Forever',desc:'No registration, no subscription, no hidden charges. Every model answer paper, manual, and syllabus is completely free for all MSBTE diploma students.',icon:'🆓'},
+    {title:'K Scheme Updated',desc:'All content is updated as per the latest MSBTE K Scheme curriculum. Get the most up-to-date syllabus, papers, and manual answers.',icon:'🔄'},
+    {title:'All Branches Covered',desc:'Covers all major diploma engineering branches including Computer, Civil, Mechanical, Electrical, E&TC, Automobile, and Chemical Engineering.',icon:'🎓'},
+  ];
+  return(
+    <div style={{background:'#fff',minHeight:'100vh'}}>
+
+      {/* ── Section 1: About Hero ── */}
+      <div style={{background:'#e8f4fd',padding:'clamp(3rem,8vw,6rem) var(--pad)'}}>
+        <div style={{maxWidth:1200,margin:'0 auto',display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(300px,100%),1fr))',gap:'3rem',alignItems:'center'}}>
+          {/* Left text */}
+          <div>
+            <p style={{fontWeight:800,fontSize:'.8rem',color:'#1a4fa0',textTransform:'uppercase',letterSpacing:'2px',marginBottom:'1rem'}}>About Us</p>
+            <h1 style={{fontSize:'clamp(1.75rem,4vw,2.75rem)',fontWeight:900,fontFamily:"'Space Grotesk',sans-serif",color:'#0f172a',lineHeight:1.2,marginBottom:'1.25rem'}}>Committed To Excellence In Online Education</h1>
+            <p style={{color:'#475569',fontSize:'clamp(.9rem,2vw,1.0625rem)',lineHeight:1.8,marginBottom:'2rem'}}>PracticalKida is a website for all MSBTE students who are struggling to get notes, Manual answers, and Model answer papers for studying.</p>
+            <div style={{display:'flex',gap:'1rem',flexWrap:'wrap'}}>
+              <button onClick={()=>nav('browse')} style={{background:'linear-gradient(135deg,#0d3278,#1a4fa0)',color:'#fff',border:'none',padding:'.875rem 1.75rem',borderRadius:12,fontWeight:700,cursor:'pointer',fontSize:'.9375rem',fontFamily:'Inter'}}>Browse Papers</button>
+              <button onClick={()=>nav('contact')} style={{background:'#fff',color:'#1a4fa0',border:'2px solid #1a4fa0',padding:'.875rem 1.75rem',borderRadius:12,fontWeight:700,cursor:'pointer',fontSize:'.9375rem',fontFamily:'Inter'}}>Contact Us</button>
+            </div>
+          </div>
+          {/* Right cards */}
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'1rem'}}>
+            {/* K Scheme Manual Answer card */}
+            <div style={{gridColumn:'1/3',background:'#fff',borderRadius:20,padding:'1.5rem',boxShadow:'0 4px 24px rgba(0,0,0,.08)',display:'flex',alignItems:'center',gap:'1.25rem',border:'1px solid #e2e8f0'}}>
+              <div style={{width:64,height:64,borderRadius:16,background:'linear-gradient(135deg,#dbeafe,#bfdbfe)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'2rem',flexShrink:0}}>📋</div>
+              <div>
+                <p style={{fontSize:'.68rem',fontWeight:700,color:'#64748b',textTransform:'uppercase',letterSpacing:'1px'}}>K SCHEME</p>
+                <p style={{fontSize:'1.25rem',fontWeight:900,fontFamily:"'Space Grotesk',sans-serif",color:'#0f172a',lineHeight:1.1}}>MANUAL<br/>ANSWER</p>
+              </div>
+            </div>
+            {/* Stats */}
+            {[['700+','Model Answer Papers'],['6','Semesters'],['7','Branches'],['Free','Always']].map(([v,l])=>(
+              <div key={l} style={{background:'#fff',borderRadius:16,padding:'1.25rem',boxShadow:'0 2px 12px rgba(0,0,0,.06)',textAlign:'center',border:'1px solid #e2e8f0',transition:'all .2s'}} onMouseEnter={e=>{e.currentTarget.style.background='linear-gradient(135deg,#0d3278,#1a4fa0)';e.currentTarget.querySelectorAll('p').forEach(p=>{p.style.color='rgba(255,255,255,.85)';});e.currentTarget.querySelector('.stat-val').style.color='#fb923c';}} onMouseLeave={e=>{e.currentTarget.style.background='#fff';e.currentTarget.querySelectorAll('p').forEach(p=>{p.style.color='';});e.currentTarget.querySelector('.stat-val').style.color='#1a4fa0';}}>
+                <p className="stat-val" style={{fontSize:'1.75rem',fontWeight:900,color:'#1a4fa0',fontFamily:"'Space Grotesk',sans-serif",lineHeight:1}}>{v}</p>
+                <p style={{fontSize:'.72rem',color:'#64748b',marginTop:4,lineHeight:1.3}}>{l}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Section 2: What We Offer ── */}
+      <div style={{padding:'clamp(3rem,8vw,5rem) var(--pad)',background:'#fff'}}>
+        <div style={{maxWidth:1200,margin:'0 auto'}}>
+          <div style={{textAlign:'center',marginBottom:'3rem'}}>
+            <p style={{fontWeight:800,fontSize:'.8rem',color:'#1a4fa0',textTransform:'uppercase',letterSpacing:'2px',marginBottom:'.75rem'}}>All Study Material</p>
+            <h2 style={{fontSize:'clamp(1.5rem,3.5vw,2.25rem)',fontWeight:900,fontFamily:"'Space Grotesk',sans-serif",color:'#0f172a',marginBottom:'1rem'}}>Everything You Need To Score Better</h2>
+            <p style={{color:'#64748b',fontSize:'clamp(.875rem,2vw,1rem)',maxWidth:560,margin:'0 auto',lineHeight:1.7}}>All model answer papers, practical manuals, K-scheme syllabus, and downloadable PDFs — organized by branch and semester.</p>
+          </div>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(min(240px,100%),1fr))',gap:'1.5rem'}}>
+            {[
+              {icon:'📂',color:'#dbeafe',accent:'#1a4fa0',title:'Model Answer Papers',desc:'Year-wise and semester-wise model answer papers for all diploma branches. Download or view online.'},
+              {icon:'📖',color:'#d1fae5',accent:'#059669',title:'Practical Manuals',desc:'Complete K-Scheme practical manual answers for all subjects. Lab-ready solutions organized neatly.'},
+              {icon:'📋',color:'#ede9fe',accent:'#7c3aed',title:'Updated Syllabus',desc:'Official MSBTE K-Scheme syllabus for all branches and semesters. Always up to date.'},
+              {icon:'📥',color:'#fef3c7',accent:'#d97706',title:'Downloadable PDFs',desc:'Save any manual or paper as PDF offline. Study without internet on your phone or laptop.'},
+            ].map((item,i)=>(
+              <div key={i} style={{background:'#fafbfc',borderRadius:20,padding:'1.75rem',border:'2px solid #f1f5f9',transition:'all .25s',cursor:'pointer'}} onMouseEnter={e=>{e.currentTarget.style.background='#fff';e.currentTarget.style.borderColor=item.accent;e.currentTarget.style.transform='translateY(-6px)';e.currentTarget.style.boxShadow=`0 16px 40px ${item.accent}20`;}} onMouseLeave={e=>{e.currentTarget.style.background='#fafbfc';e.currentTarget.style.borderColor='#f1f5f9';e.currentTarget.style.transform='none';e.currentTarget.style.boxShadow='none';}}>
+                <div style={{width:60,height:60,borderRadius:18,background:item.color,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.75rem',marginBottom:'1.25rem'}}>{item.icon}</div>
+                <h3 style={{fontWeight:800,fontSize:'1.0625rem',fontFamily:"'Space Grotesk',sans-serif",color:'#0f172a',marginBottom:'.625rem'}}>{item.title}</h3>
+                <p style={{color:'#64748b',fontSize:'.875rem',lineHeight:1.65}}>{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Section 3: Why Choose Us ── */}
+      <div style={{background:'#f8fafc',padding:'clamp(3rem,8vw,5rem) var(--pad)'}}>
+        <div style={{maxWidth:1200,margin:'0 auto',display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(300px,100%),1fr))',gap:'3rem',alignItems:'center'}}>
+          {/* Left image block */}
+          <div style={{position:'relative'}}>
+            <div style={{background:'linear-gradient(135deg,#0d3278,#1a4fa0)',borderRadius:24,padding:'2.5rem',minHeight:320,display:'flex',flexDirection:'column',justifyContent:'space-between',position:'relative',overflow:'hidden'}}>
+              <div style={{position:'absolute',top:-40,right:-40,width:160,height:160,borderRadius:'50%',background:'rgba(249,115,22,.15)',pointerEvents:'none'}}/>
+              <div>
+                <p style={{color:'rgba(255,255,255,.6)',fontSize:'.75rem',fontWeight:700,textTransform:'uppercase',letterSpacing:'1px',marginBottom:'.5rem'}}>MSBTE STUDENTS</p>
+                <h3 style={{color:'#fff',fontWeight:900,fontFamily:"'Space Grotesk',sans-serif",fontSize:'1.5rem',lineHeight:1.3}}>Study Smarter,<br/>Not Harder</h3>
+              </div>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'.875rem',marginTop:'2rem'}}>
+                {[['700+','Papers'],['7','Branches'],['6','Sems'],['Free','Always']].map(([v,l])=>(
+                  <div key={l} style={{background:'rgba(255,255,255,.12)',borderRadius:12,padding:'.875rem',textAlign:'center',border:'1px solid rgba(255,255,255,.15)'}}>
+                    <p style={{color:'#fb923c',fontWeight:900,fontSize:'1.25rem',fontFamily:"'Space Grotesk',sans-serif",lineHeight:1}}>{v}</p>
+                    <p style={{color:'rgba(255,255,255,.6)',fontSize:'.7rem',marginTop:3}}>{l}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          {/* Right accordion */}
+          <div>
+            <p style={{fontWeight:800,fontSize:'.8rem',color:'#1a4fa0',textTransform:'uppercase',letterSpacing:'2px',marginBottom:'.75rem'}}>Why Choose Us</p>
+            <h2 style={{fontSize:'clamp(1.5rem,3.5vw,2.25rem)',fontWeight:900,fontFamily:"'Space Grotesk',sans-serif",color:'#0f172a',marginBottom:'.875rem',lineHeight:1.25}}>We Make Learning Accessible, Flexible</h2>
+            <p style={{color:'#64748b',fontSize:'.9375rem',lineHeight:1.7,marginBottom:'2rem'}}>Our platform ensures students can study anywhere, anytime, with resources that make every lesson engaging, practical, and impactful.</p>
+            <div style={{display:'flex',flexDirection:'column',gap:'.75rem'}}>
+              {whyItems.map((item,i)=>(
+                <div key={i} style={{border:`2px solid ${activeWhy===i?'#1a4fa0':'#e2e8f0'}`,borderRadius:16,overflow:'hidden',transition:'all .2s',background:activeWhy===i?'#eff6ff':'#fff',cursor:'pointer'}} onClick={()=>setActiveWhy(activeWhy===i?-1:i)}>
+                  <div style={{padding:'1rem 1.25rem',display:'flex',alignItems:'center',gap:'.875rem'}}>
+                    <div style={{width:36,height:36,borderRadius:10,background:activeWhy===i?'#1a4fa0':'#f1f5f9',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.1rem',flexShrink:0,transition:'all .2s'}}>{item.icon}</div>
+                    <span style={{fontWeight:700,fontSize:'.9375rem',color:activeWhy===i?'#0d3278':'#334155',flex:1}}>{item.title}</span>
+                    <span style={{color:activeWhy===i?'#1a4fa0':'#94a3b8',fontSize:'1.1rem',fontWeight:700,transition:'transform .2s',transform:activeWhy===i?'rotate(45deg)':'none',display:'inline-block'}}>+</span>
+                  </div>
+                  {activeWhy===i&&<div style={{padding:'0 1.25rem 1rem 4.125rem',color:'#475569',fontSize:'.875rem',lineHeight:1.7,animation:'fadeUp .2s ease'}}>{item.desc}</div>}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Section 4: CTA ── */}
+      <div style={{background:'linear-gradient(135deg,#0d3278,#1a4fa0)',padding:'clamp(3rem,6vw,4rem) var(--pad)',textAlign:'center'}}>
+        <div style={{maxWidth:600,margin:'0 auto'}}>
+          <h2 style={{fontSize:'clamp(1.5rem,3.5vw,2rem)',fontWeight:900,fontFamily:"'Space Grotesk',sans-serif",color:'#fff',marginBottom:'.875rem'}}>Start Studying For Free Today</h2>
+          <p style={{color:'rgba(255,255,255,.72)',fontSize:'clamp(.875rem,2vw,1rem)',lineHeight:1.7,marginBottom:'2rem'}}>Join thousands of MSBTE diploma students who use our portal to prepare for their exams. No signup needed.</p>
+          <div style={{display:'flex',gap:'1rem',justifyContent:'center',flexWrap:'wrap'}}>
+            <button onClick={()=>nav('browse')} style={{background:'#f97316',border:'none',color:'#fff',padding:'.875rem 2rem',borderRadius:12,fontWeight:800,cursor:'pointer',fontSize:'1rem',fontFamily:'Inter'}}>📂 Browse Papers</button>
+            <button onClick={()=>nav('syllabus')} style={{background:'rgba(255,255,255,.15)',border:'2px solid rgba(255,255,255,.35)',color:'#fff',padding:'.875rem 2rem',borderRadius:12,fontWeight:700,cursor:'pointer',fontSize:'1rem',fontFamily:'Inter'}}>📋 View Syllabus</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════
+   FOOTER
+══════════════════════════════════════════════ */
+function Footer({nav}){
+  return(
+    <footer style={{background:'#0f172a',color:'#64748b',padding:'clamp(1.5rem,4vw,2.5rem) var(--pad)',marginTop:'2rem'}}>
+      <div style={{maxWidth:'var(--max-w)',margin:'0 auto'}}>
+        <div style={{display:'flex',justifyContent:'space-between',flexWrap:'wrap',gap:'2rem',marginBottom:'2rem'}}>
+          <div style={{maxWidth:300}}>
+            <div style={{display:'flex',alignItems:'center',gap:'.75rem',marginBottom:'.875rem'}}>
+              <div style={{width:36,height:36,borderRadius:10,background:'linear-gradient(135deg,#0d3278,#1a4fa0)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.2rem'}}>📚</div>
+              <span style={{color:'#fff',fontWeight:800,fontFamily:"'Space Grotesk',sans-serif"}}>MSBTE Study Portal</span>
+            </div>
+            <p style={{fontSize:'.875rem',lineHeight:1.6}}>Free model answer papers, practical manuals, and syllabus for all MSBTE diploma branches.</p>
+          </div>
+          <div>
+            <p style={{color:'rgba(255,255,255,.4)',fontSize:'.75rem',fontWeight:700,textTransform:'uppercase',letterSpacing:'1px',marginBottom:'.875rem'}}>Navigation</p>
+            {[['home','Home'],['browse','Browse'],['manual','Manual'],['syllabus','Syllabus'],['manualpdf','Manual PDF'],['contact','Contact'],['about','About Us'],['privacy','Privacy Policy']].map(([p,l])=>(
+              <div key={p} onClick={()=>nav(p)} style={{color:'#64748b',fontSize:'.875rem',marginBottom:'.5rem',cursor:'pointer',transition:'color .15s'}} onMouseEnter={e=>e.currentTarget.style.color='#f97316'} onMouseLeave={e=>e.currentTarget.style.color='#64748b'}>{l}</div>
+            ))}
+          </div>
+        </div>
+        <div style={{borderTop:'1px solid #1e293b',paddingTop:'1.5rem',display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:'1rem'}}>
+          <p style={{fontSize:'.8125rem'}}>&copy; 2025 MSBTE Study Portal. Free forever.</p>
+          <div style={{display:'flex',gap:'1.5rem',flexWrap:'wrap'}}>
+            <span onClick={()=>nav('privacy')} style={{fontSize:'.8125rem',cursor:'pointer',color:'#64748b',display:'flex',alignItems:'center',gap:'.35rem',transition:'color .15s'}} onMouseEnter={e=>e.currentTarget.style.color='#f97316'} onMouseLeave={e=>e.currentTarget.style.color='#64748b'}>👥 Privacy Policy</span>
+            <span onClick={()=>nav('about')} style={{fontSize:'.8125rem',cursor:'pointer',color:'#64748b',display:'flex',alignItems:'center',gap:'.35rem',transition:'color .15s'}} onMouseEnter={e=>e.currentTarget.style.color='#f97316'} onMouseLeave={e=>e.currentTarget.style.color='#64748b'}>&#x2139;&#xfe0f; About Us</span>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+/* ══════════════════════════════════════════════
+   APP
+══════════════════════════════════════════════ */
+function App(){
+  const [page,setPage]=useState('home');const [papers,setPapers]=useState([]);const [user,setUser]=useState(null);const [loading,setLoading]=useState(true);const [viewPaper,setViewPaper]=useState(null);
+  const nav=p=>setPage(p);
+  const logout=async()=>{try{await auth.signOut();}catch(e){}setUser(null);nav('home');toast('Logged out','i');};
+  useEffect(()=>{fbLoad().then(p=>{setPapers(p);setLoading(false);});auth.onAuthStateChanged(u=>setUser(u));},[]);
+
+  if(loading)return(
+    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:'1rem',background:'#eef2f9'}}>
+      <div style={{width:48,height:48,border:'5px solid #dbeafe',borderTopColor:'#1a4fa0',borderRadius:'50%',animation:'spin .75s linear infinite'}}/>
+      <p style={{color:'#1a4fa0',fontWeight:700}}>Loading MSBTE Portal...</p>
+    </div>
+  );
+
+  return(
+    <div style={{minHeight:'100vh',display:'flex',flexDirection:'column',overflowX:'hidden'}}>
+      <Navbar page={page} nav={nav} user={user} logout={logout}/>
+      {viewPaper&&<PdfModal paper={viewPaper} onClose={()=>setViewPaper(null)}/>}
+      <main style={{flex:1,minWidth:0,overflowX:'hidden'}}>
+        {page==='home'&&<HomePage papers={papers} nav={nav}/>}
+        {page==='browse'&&<BrowsePage papers={papers} onView={setViewPaper} isAdmin={!!user} onDel={id=>{fbDel(id);setPapers(p=>p.filter(x=>x.id!==id));}}/>}
+        {page==='contact'&&<ContactPage/>}
+        {page==='login'&&<LoginPage onLogin={u=>{setUser(u);nav('admin');}}/>}
+        {(page==='admin'&&!user)&&<LoginPage onLogin={u=>{setUser(u);nav('admin');}}/>}
+        {(page==='admin'&&!!user)&&<AdminPanel papers={papers} onAdd={p=>setPapers(prev=>[p,...prev])} onDel={id=>setPapers(p=>p.filter(x=>x.id!==id))}/>}
+        {page==='manual'&&<ManualPage isAdmin={!!user}/>}
+        {page==='syllabus'&&<SyllabusPage isAdmin={!!user}/>}
+        {page==='manualpdf'&&<ManualPdfPage isAdmin={!!user}/>}
+        {page==='privacy'&&<PrivacyPage nav={nav}/>}
+        {page==='about'&&<AboutPage nav={nav}/>}
+      </main>
+      <Footer nav={nav}/>
+      <Toasts/>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
